@@ -1,0 +1,491 @@
+package HSCommPB;
+
+message enums {
+	enum accountType {				// 帐户类型
+		noneAccountType = 0;		// 不适用
+		fund = 1;					// 资金账号
+		shareholder = 2;			// 股东内码（internal_account）
+		fundcard = 3;				// 交易卡号（fund_card）
+		bank = 4;					// 银行帐号（bank_account）
+		stock = 5;					// 证券账号（stock_account）
+		client = 6;					// 客户标示（client_no）
+		futures = 7;				// 期货帐号
+	}
+	enum exchangeType {				// 交易所类型
+		noneExchangeType = 0;		// 不适用
+		unknown = 1;				// 前台未知交易所
+		shanghai = 2;				// 上海
+		shenzhen = 3;				// 深圳
+		specialTransferA = 4;		// 特转A
+		specialTransferB = 5;		// 特转B
+		shanghaiB = 6;				// 上海B
+		shenzhenB = 7;				// 深圳B
+		zhengzhouFutures = 8;		// 郑州交易所
+		dalianFutures = 9;			// 大连交易所
+		shanghaiFutures = 10;		// 上海交易所
+		financialFutures = 11;		// 金融交易所
+	}
+	enum moneyType {				// 币种
+		noneMoneyType = 0;			// 不适用
+		rmb = 1;					// 人民币
+		dollar  = 2;				// 美圆
+		hkdollar = 3;				// 港币
+	}
+	enum squareFlag {				// 结算标志
+		noneSquareFlag = 0;			// 不适用
+		local = 1;					// 本地客户
+		secbank  = 2;				// 银证通客户
+		cts = 3;					// 三方存管客户
+	}
+	enum entrustWay {				// 委托方式
+		noneEntrustWay = 0;			// 不适用
+		self = 1;					// 自助委托
+		phone = 2;					// 电话委托
+		proxy = 3;					// 驻留委托
+		remote = 4;					// 远程委托
+		counter  = 5;				// 柜台委托
+		roaming = 6;				// 漫游委托
+		branch = 7;					// 分支委托
+		web = 8;					// 网上委托
+		mobile = 9;					// 手机委托
+		vip = 10;					// VIP终端委托
+	}
+	enum sysStatus {				// 系统状态
+		noneSysStatus = 0;			// 不适用
+		stopped = 1;				// 停止
+		on = 2;						// 运行
+		testing = 3;				// 测试
+		maintenance = 4;			// 系统维护
+		closed = 5;					// 收市数据处理
+	}
+	enum entrustBS {				// 委托买卖类别
+		noneEntrustBS = 0;			// 不适用
+		buy = 1;					// 买
+		sell = 2;					// 卖
+	}
+	enum holderStatus {				// 股东状态
+		noneHolderStatus = 0;		// 不适用
+		normal = 1;					// 正常
+		freezed = 2;				// 冻结
+		lost = 3;					// 挂失
+		canceled = 4;				// 销户
+		hibernated = 5;				// 休眠
+		riskTreatment = 6;			// 风险处置
+		unqualified = 7;			// 不合格
+		locked = 8;					// 锁定
+	}
+	enum businessStatus {			// 成交状态
+		noneBusinessStatus = 0;		// 不适用
+		done = 1;					// 成交
+		invalid = 2;				// 废单
+		confirmed = 3;				// 确认
+	}
+	enum businessType {				// 成交类别
+		noneBusinessType = 0;		// 不适用
+		buysell = 1;				// 买卖
+		query = 2;					// 查询
+		withdraw = 3;				// 撤单
+	}
+}
+
+message clientCheckRequest {		// 客户登录校验 请求包
+	message call {
+		required enums.accountType accountType = 1;									// 登录校检的帐户类型
+		required string account = 2;												// 帐号
+		required string password = 3;												// 密码
+		optional enums.exchangeType exchangeType = 4 [default = noneExchangeType];	// 交易所类型，当帐户类型为证券账号时用到
+		optional string bankNo = 5 [default = ""];									// 银行编号，当帐户类型为银行帐号时用到
+		optional enums.entrustWay entrustWay = 6 [default = self];					// 委托方式
+		optional string branchNo = 7 [default = ""];								// 分支号
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message clientCheckResponse {		// 客户登录校验 应答
+	message result {
+		required string clientID = 1;												// 客户号
+		required string clientName = 2;												// 客户姓名
+		required string branchNo = 3;												// 分支号
+		required string enableBalance = 4;											// 可用金额
+		required string currentBalance = 5;											// 当前余额
+		required string fundAccount = 6;											// 资金帐号
+		required int32 fundAccountCount = 7;										// 资产账号个数，当客户号登录的时候返回资产账号个数，否则返回0
+		required enums.sysStatus sysStatus = 8;										// 系统状态
+		required string sysStatusName = 9;											// 系统状态说明
+		required int32 moneyCount = 10;												// 开通币种个数
+		required enums.squareFlag squareFlag = 11;									// 结算标示，用来标志资产账户的结算模式。
+		required string clientRights = 12;											// 客户权限
+		required string companyName = 13;											// 公司名称
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+
+		optional int32 currentDate = 16 [default = 0];								// 当前交易日期
+		optional int32 lastIP = 17 [default = 0];									// 上次登陆IP地址
+		optional int64 lastLoginTime = 18 [default = 0];							// 上次登录时间，格式为FILETIME
+		optional string bankNo = 19 [default = ""];									// 银行编号
+		optional string remark = 20 [default = ""];									// 摘要
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message entrustStockRequest {		// 委托股票 请求包
+	message call {
+		required int64 localID = 1;													// 本地单号
+		required string branchNo = 2;												// 分支号
+		required string fundAccount = 3;											// 资金帐号
+		required string password = 4;												// 密码
+		required enums.exchangeType exchangeType = 5;								// 交易所类型
+		required string stockAccount = 6;											// 股东代码
+		required string stockCode = 7;												// 证券代码
+		required int64 entrustAmount = 8;											// 委托数量
+		required int64 entrustPrice = 9;											// 委托价格*1000，整数
+		required enums.entrustBS entrustBS = 10;									// 委托方向
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message entrustStockResponse {		// 委托股票 应答
+	message result {
+		required int64 localID = 1;													// 本地单号
+		required string entrustNo = 2;												// 委托编号
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message cancelEntrustRequest {		// 委托撤单 请求包
+	message call {
+		required string branchNo = 1;												// 分支号
+		required string fundAccount = 2;											// 资金帐号
+		required string password = 3;												// 密码
+		required string entrustNo = 4;												// 委托编号
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message cancelEntrustResponse {		// 委托撤单 应答
+	message result {
+		required string entrustNo = 1;												// 委托编号
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message queryEntrustRequest {		// 查询委托 请求包
+	message call {
+		required string branchNo = 1;												// 分支号
+		required string fundAccount = 2;											// 资金帐号
+		required string password = 3;												// 密码
+		optional string entrustNo = 4 [default = ""];								// 委托编号，如果为空则查所有委托
+		optional bool queryOnlyCancelable = 5 [default = false];					// 是否只查可撤单
+		optional int32 requestNumber = 6 [default = 1000];							// 返回的最大结果数（最大为1000）
+		optional string lastPositionString = 7 [default = ""];						// 起始查询的定位串
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message queryEntrustResponse {		// 查询委托 应答
+	message result {
+		message entrust {
+			required string entrustNo = 1;											// 委托编号
+			required string stockCode = 2;											// 证券代码
+			required string stockName = 3;											// 证券名称
+			required enums.entrustBS entrustBS = 4;									// 委托方向
+			required int64 entrustAmount = 5;										// 委托数量
+			required int64 entrustPrice = 6;										// 委托价格*1000，整数
+			required int64 businessAmount = 7;										// 成交数量
+			required int64 businessPrice = 8;										// 平均成交价格*1000，整数
+			required int64 cancelvol=9;											//取消数量
+			required int64 internalsid=10;											// 股票内码
+			required int64 FEEandTAX=11;										//交易费*1000
+			required int64 tradedone=12;											//交易是否完成
+			required int64 success = 13;										// 状态名称
+			optional string invalidInfo = 14;										// 废单原因
+		}
+		repeated entrust entrusts = 1;												// 多个委托信息
+		required string lastPositionString = 2;										// 最后一个项目的定位串
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message queryStockRequest {			// 查询股票 请求包
+	message call {
+		required string branchNo = 1;												// 分支号
+		required string fundAccount = 2;											// 资金帐号
+		required string password = 3;												// 密码
+		optional enums.exchangeType exchangeType = 4 [default = noneExchangeType];	// 交易所类型，不为空，查确定的，为空，查所有
+		optional string stockCode = 5 [default = ""];								// 证券代码，为空，查所有，不为空，查确定的，此时exchangeType必须不为空
+		optional int32 requestNumber = 6 [default = 1000];							// 返回的最大结果数（最大为1000）
+		optional string lastPositionString = 7 [default = ""];						// 起始查询的定位串
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message queryStockResponse {		// 查询股票 应答
+	message result {
+		message stock {
+			required enums.exchangeType exchangeType = 1;							// 交易所类型
+			required string stockAccount = 2;										// 证券账号
+			required string stockCode = 3;											// 证券代码
+			required string stockName = 4;											// 证券名称
+			required int64 currentAmount = 5;										// 当前数量
+			required int64 enableAmount = 6;										// 可卖股票
+			required int64 lastPrice = 7;											// 最新价*1000，整数
+			required int64 costPrice = 8;											// 成本价*1000，整数
+			required int64 incomeBalance = 9;										// 买卖盈亏*1000，整数
+			required int64 marketValue = 10;										// 证券市值*1000，整数
+			
+			required sint64 sumBuyAmount = 17 [default = -1];						// 累计买入数量*1000，整数
+			required sint64 sumBuyBalance = 18 [default = -1];						// 累计买入金额*1000，整数
+			required sint64 realBuyAmount = 19 [default = -1];						// 回报买入数量*1000，整数
+			required sint64 realBuyBalance = 20 [default = -1];						// 回报买入金额*1000，整数
+			required sint64 sumSellAmount = 21 [default = -1];						// 累计卖出数量*1000，整数
+			required sint64 sumSellBalance = 22 [default = -1];						// 累计卖出金额*1000，整数
+			required sint64 realSellAmount = 23 [default = -1];						// 回报卖出数量*1000，整数
+			required sint64 realSellBalance = 24 [default = -1];					// 回报卖出金额*1000，整数
+			required sint64 correctAmount = 25 [default = -1];						// 资产修正数量*1000，整数
+			required sint64 incomeBalanceNofare = 26 [default = -1];				// 不包含卖出费用的盈亏(=市值-(总买入金额 + 当日买入金额-总卖出金额-当日卖出金额))*1000，整数
+			required sint64 uncomeBuyAmount = 27 [default = -1];					// 未回买入数量*1000，整数
+			required sint64 uncomeSellAmount = 28 [default = -1];					// 未回卖出数量*1000，整数
+		}
+		repeated stock stocks = 1;													// 多个股票信息
+		required string lastPositionString = 2;										// 最后一个项目的定位串
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message queryFundRequest {			// 查询资金 请求包
+	message call {
+		required string branchNo = 1;												// 分支号
+		required string fundAccount = 2;											// 资金帐号
+		required string password = 3;												// 密码
+		optional enums.moneyType moneyType = 4 [default = noneMoneyType];			// 币种类别
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message queryFundResponse {			// 查询资金 应答
+	message result {
+		message currency {
+			required enums.moneyType moneyType = 1 [default = noneMoneyType];		// 币种类别
+			required int64 currentBalance = 2;										// 当前余额*1000，整数
+			required int64 enableBalance = 3;										// 可用金额*1000，整数
+			required int64 fetchBalance = 4;										// 可取金额*1000，整数
+			required int64 interest = 5;											// 待入账利息*1000，整数
+			required int64 assetBalance = 6;										// 资产总值（不含基金市值）*1000，整数
+			required int64 fetchCash = 7;											// 可取现金*1000，整数
+			required int64 fundBalance = 8;											// 资金（= 资产总值 - 证券市值）*1000，整数
+			required int64 marketValue = 9;											// 证券市值*1000，整数
+			required int64 opfundMarketValue = 10;									// 基金市值*1000，整数
+			required int64 preInterest = 11;										// 预计利息*1000，整数
+		}
+		repeated currency money = 1;												// 多个资金信息
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message queryShareholderRequest {		// 查询股东 请求包
+	message call {
+		required string branchNo = 1;												// 分支号
+		required string fundAccount = 2;											// 资金帐号
+		required string password = 3;												// 密码
+		optional enums.exchangeType exchangeType = 4 [default = noneExchangeType];	// 交易所类型，不为空，查确定的，为空，查所有
+		optional string stockCode = 5 [default = ""];								// 证券代码，可为空，若输入则输出所有持有该证券的股东
+		optional int32 requestNumber = 6 [default = 1000];							// 返回的最大结果数（最大为1000）
+		optional string lastPositionString = 7 [default = ""];						// 起始查询的定位串
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message queryShareholderResponse {		// 查询股东 应答
+	message result {
+		message shareholder {
+			required enums.exchangeType exchangeType = 1;							// 交易所类型
+			required string exchangeName = 2;										// 交易所名称
+			required string stockAccount = 3;										// 证券账号
+			required enums.holderStatus holderStatus = 4;							// 股东状态
+			required bool mainShareHolder = 5;										// 是否为主账号
+			optional string seatNo = 6 [default = ""];								// 席位号
+			optional sint64 enableAmount = 7 [default = -1];						// 可卖数量
+		}
+		repeated shareholder shareholders = 1;										// 多个股东信息
+		required string lastPositionString = 2;										// 最后一个项目的定位串
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message queryBusinessRequest {			// 查询成交 请求包
+	message call {
+		required string branchNo = 1;												// 分支号
+		required string fundAccount = 2;											// 资金帐号
+		required string password = 3;												// 密码
+		optional int32 startDate = 4 [default = 0];									// 起始日期，要么起始日期和结束日期都为0表示查当日，要么都不为0表示查历史
+		optional int32 endDate = 5 [default = 0];									// 结束日期，要么起始日期和结束日期都为0表示查当日，要么都不为0表示查历史
+		optional enums.exchangeType exchangeType = 6 [default = noneExchangeType];	// 交易所类型，不为空，查确定的，为空，查所有
+		optional string stockCode = 7 [default = ""];								// 证券代码，为空，查所有，不为空，查确定的，此时exchangeType必须不为空
+		optional int32 requestNumber = 8 [default = 1000];							// 返回的最大结果数（最大为1000）
+		optional string lastPositionString = 9 [default = ""];						// 起始查询的定位串
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message queryBusinessResponse {			// 查询成交 应答
+	message result {
+		message business {
+			required int32 date = 1;												// 日期
+			required int32 time = 2;												// 成交时间
+			required enums.exchangeType exchangeType = 3;							// 交易所类型
+			required string stockAccount = 4;										// 证券账号
+			required string stockCode = 5;											// 证券代码
+			required string stockName = 6;											// 证券名称
+			required enums.entrustBS entrustBS = 7;									// 买卖方向
+			required int64 businessAmount = 8;										// 成交数量
+			required int64 businessPrice = 9;										// 成交价格*1000，整数
+			required int64 businessBalance = 10;									// 成交金额*1000，整数
+			required int32 businessTimes = 11;										// 成交笔数
+			required enums.businessStatus businessStatus = 12;						// 成交状态
+			required enums.businessType businessType = 13;							// 成交类别
+			required string entrustNo = 14;											// 合同号
+			required string reportNo = 15;											// 申报号
+			optional string remark = 16 [default = ""];								// 备注
+		}
+		repeated business businesses = 1;											// 多个成交信息
+		required string lastPositionString = 2;										// 最后一个项目的定位串
+		optional int32 errorNo = 14 [default = 0];									// 错误码
+		optional string errorMsg = 15 [default = ""];								// 错误信息
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+
+
+message getEntrustByLocalIDRequest {		// 根据本地单号查委托 请求包
+	message call {
+		required int64 localID = 1;													// 本地单号
+		required string fundAccount = 2;											// 资金帐号
+	}
+	repeated call requests = 1;				// 多个请求
+}
+
+message getEntrustByLocalIDResponse {		// 根据本地单号查委托 应答
+	message result {
+		required int64 localID = 1;													// 本地单号
+		required string fundAccount = 2;											// 资金帐号
+		required string entrustNo = 3;												// 委托编号
+	}
+	repeated result responses = 1;			// 多个应答
+}
+
+message queryOrdersRequest{
+	message call{
+		required string username=1;			//用户名
+		required string password=2;			//密码
+		required int64 date=3;				//查询日期
+	}
+	repeated call requests=1;
+}
+
+message queryOrdersResponse{
+	message result{
+		message query{
+		required int64 returndate=1;			
+		required string secuname=2;				//股票名字
+		required string code=3;					//股票代码
+		required string direction=4;				//买卖方向
+		required int64 ordervol=5;					//下单量
+		required int64 orderprice=6;				//下单价*1000
+		required int64 averageprice=7;				//平均成交价*1000
+		required int64 tradevol=8;					//交易量
+		required int64 cancelvol=9;				//取消量
+		required string flag=10;					//标识
+		required string adddatetime=11;				//我也不知道
+		required int64 acid=12;					//account id,根据acid来对照
+		required int64 oid=13;					//orderid
+			}
+		repeated query queries=1;
+		optional int32 errorNo = 2 [default = 0];									// 错误码
+		optional string errorMsg = 3 [default = ""];
+	}
+	repeated result responses=1;
+								// 错误信息
+}
+message queryCapitalRequest{		//查询资金
+	message call{
+		required int64 accountid=1;					//ACID
+	}	
+	repeated call requests=1;
+}
+
+message queryCapitalResponse{
+	message result{
+		message capital{
+			required int64 id=1;
+			required int64 exchangeid=2;				//交易所代码
+			required int64 currencytype=3;				//币种代码
+			required int64 amounts=4;					//数据库中的amount*1000
+			required int64 freeamounts=5;				//数据库中freeamounts*1000
+			required int64 frozenamount=6;				//数据库中frozenamount*1000
+			required int64 margin=7;					//数据库中margin*1000
+			required int64 floatingPL=8;				//数据库中floatingPL*1000
+			required int64 equity=9;					//数据库中equity*1000
+			required int64 accountid=10;
+			}
+		repeated capital capitals=1;
+		optional int32 errorNo = 2 [default = 0];									// 错误码
+		optional string errorMsg = 3 [default = ""];
+	}
+	repeated result responses=1;
+}
+
+message entrustCancelRequest{
+	message call{
+		required string username=1;
+		required string password=2;
+		required int64 OMID=3;					//ORDER ID
+	}
+	repeated call requests=1;
+}
+	
+message entrustCancleResponse{
+	message result{
+		required int64 success=1;
+		required string errormsg=2;
+	}
+	repeated result responses=1;
+}
+
+service HSCommService {
+	rpc clientCheck (clientCheckRequest) returns (clientCheckResponse);
+	rpc entrustStock (entrustStockRequest) returns (entrustStockResponse);
+	rpc cancelEntrust (cancelEntrustRequest) returns (cancelEntrustResponse);
+	rpc queryEntrust (queryEntrustRequest) returns (queryEntrustResponse);
+	rpc queryStock (queryStockRequest) returns (queryStockResponse);
+	rpc queryFund (queryFundRequest) returns (queryFundResponse);
+	rpc queryShareholder (queryShareholderRequest) returns (queryShareholderResponse);
+	rpc queryBusiness (queryBusinessRequest) returns (queryBusinessResponse);
+	rpc getEntrustByLocalID (getEntrustByLocalIDRequest) returns (getEntrustByLocalIDResponse);
+}

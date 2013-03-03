@@ -1,0 +1,156 @@
+package FutureDataPB;
+
+
+
+
+///深度行情
+	message CThostFtdcDepthMarketDataFieldStruct
+	{
+		///交易日
+		required string	TradingDay = 1;
+		///合约代码
+		required string	InstrumentID = 2;
+		///交易所代码
+		required string	ExchangeID = 3;
+		///合约在交易所的代码
+		required string ExchangeInstID = 4;
+		///最新价
+		required double	LastPrice = 5;
+		///上次结算价
+		required double	PreSettlementPrice = 6;
+		///昨收盘
+		required double	PreClosePrice = 7;
+		///昨持仓量
+		required double	PreOpenInterest = 8;
+		///今开盘
+		required double	OpenPrice = 9;
+		///最高价
+		required double	HighestPrice = 10;
+		///最低价
+		required double	LowestPrice = 11;
+		///数量
+		required int32 Volume = 12;
+		///成交金额
+		required double	Turnover = 13;
+		///持仓量
+		required double	OpenInterest = 14;
+		///今收盘
+		required double	ClosePrice = 15;
+		///本次结算价
+		required double	SettlementPrice = 16;
+		///涨停板价
+		required double	UpperLimitPrice = 17;
+		///跌停板价
+		required double	LowerLimitPrice = 18;
+		///昨虚实度
+		required double	PreDelta = 19;
+		///今虚实度
+		required double	CurrDelta = 20;
+		///最后修改时间
+		required string	UpdateTime = 21;
+		///最后修改毫秒
+		required int32	UpdateMillisec = 22;
+		///申买价一
+		required double	BidPrice1 = 23;
+		///申买量一
+		required int32	BidVolume1 = 24;
+		///申卖价一
+		required double	AskPrice1 = 25;
+		///申卖量一
+		required int32	AskVolume1 = 26;
+		///申买价二
+		required double	BidPrice2 = 27;
+		///申买量二
+		required int32	BidVolume2 = 28;
+		///申卖价二
+		required double	AskPrice2 = 29;
+		///申卖量二
+		required int32	AskVolume2 = 30;
+		///申买价三
+		required double	BidPrice3 = 31;
+		///申买量三
+		required int32	BidVolume3 = 32;
+		///申卖价三
+		required double	AskPrice3 = 33;
+		///申卖量三
+		required int32	AskVolume3 = 34;
+		///申买价四
+		required double	BidPrice4 = 35;
+		///申买量四
+		required int32	BidVolume4 = 36;
+		///申卖价四
+		required double	AskPrice4 = 37;
+		///申卖量四
+		required int32	AskVolume4 = 38;
+		///申买价五
+		required double	BidPrice5 = 39;
+		///申买量五
+		required int32	BidVolume5 = 40;
+		///申卖价五
+		required double	AskPrice5 = 41;
+		///申卖量五
+		required int32	AskVolume5 = 42;
+		///当日均价
+		required double	AveragePrice = 43;
+	}
+
+message FutureData
+{
+	message MarketData {
+		required int32 Date = 1;
+		required int32 Time = 2;
+		required CThostFtdcDepthMarketDataFieldStruct Data = 3;
+	}
+	required int32 Timestamp = 1;
+	required int32 Handle = 2;
+	repeated MarketData DataPack = 3;
+}
+
+message CurrentDataRequest {
+	message ContractInfo{
+		required int32 Date = 1;
+		required int32 Time = 2;
+		required string Contract = 3;
+	}
+	required int32 TimeStamp = 1;
+	required int32 Handle  = 2;
+	repeated ContractInfo ContractList = 3;
+}
+//MajorCmd=2 当前行情（直接返回最新） MajorCmd=3 最新行情（等待最新行情返回或超时返回）
+
+message HistoryDataRequest {
+	message HistoryDataInfo{
+		required string Contract = 1;
+		required int32 StartDate = 2;
+		required int32 StartTime = 3;
+		required int32 EndDate = 4;
+		required int32 EndTime = 5;
+	}
+	required int32 TimeStamp = 1;
+	required int32 Handle  = 2;
+	repeated HistoryDataInfo DataInfo = 3;
+}
+
+message HistoryDataResponse
+{
+	message MarketDataSeries {
+		required string Contract = 1;
+		repeated CThostFtdcDepthMarketDataFieldStruct Data = 2;
+	}
+	required int32 Timestamp = 1;
+	required int32 Handle = 2;
+	repeated MarketDataSeries DataSeries = 3;
+}
+
+/*
+message ConRequest {
+	required int32 QueType = 1;
+	required string ContractList = 2;
+}
+
+message ConResponse {
+	required int32 TimeStamp = 1;
+	repeated string ContractList = 2;
+}
+
+*/

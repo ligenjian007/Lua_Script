@@ -1,0 +1,215 @@
+package SATDataPB;
+
+
+message mREALQDCACHELONG
+{
+	required int32	CURRENT  = 1;	//-1 表示该项股票没有数据
+	required int32	PRECLOSE = 2;
+	required int32	OPEN = 3;	
+	required int32	HIGH = 4;
+	required int32	LOW = 5;
+	required int32	BUYPRICE1 = 6;
+	required int32	BUYPRICE2 = 7;
+	required int32	BUYPRICE3 = 8;
+	required int32	BUYPRICE4 = 9;
+	required int32	BUYPRICE5 = 10;
+	required double	BUYVOL1 = 11;
+	required double	BUYVOL2 = 12;
+	required double	BUYVOL3 = 13;
+	required double	BUYVOL4 = 14;
+	required double	BUYVOL5 = 15;
+	required int32	SELLPRICE1 = 16;
+	required int32	SELLPRICE2 = 17;
+	required int32	SELLPRICE3 = 18;
+	required int32	SELLPRICE4 = 19;
+	required int32	SELLPRICE5 = 20;
+	required double	SELLVOL1 = 21;
+	required double	SELLVOL2 = 22;
+	required double	SELLVOL3 = 23;
+	required double	SELLVOL4 = 24;
+	required double	SELLVOL5 = 25;
+	required double	VOL = 26;
+	required double	AMOUT = 27;
+} 
+
+
+message mQDCACHE
+{
+	required int32	CURRENT  = 1;	//-1 表示该项股票没有数据
+	required int32	PRECLOSE = 2;
+	required int32	OPEN = 3;	
+	required int32	HIGH = 4;
+	required int32	LOW = 5;
+	required int32	BUYPRICE1 = 6;
+	required int32	BUYPRICE2 = 7;
+	required int32	BUYPRICE3 = 8;
+	required int32	BUYPRICE4 = 9;
+	required int32	BUYPRICE5 = 10;
+	required double	BUYVOL1 = 11;
+	required double	BUYVOL2 = 12;
+	required double	BUYVOL3 = 13;
+	required double	BUYVOL4 = 14;
+	required double	BUYVOL5 = 15;
+	required int32	SELLPRICE1 = 16;
+	required int32	SELLPRICE2 = 17;
+	required int32	SELLPRICE3 = 18;
+	required int32	SELLPRICE4 = 19;
+	required int32	SELLPRICE5 = 20;
+	required double	SELLVOL1 = 21;
+	required double	SELLVOL2 = 22;
+	required double	SELLVOL3 = 23;
+	required double	SELLVOL4 = 24;
+	required double	SELLVOL5 = 25;
+	required double	VOL = 26;
+	required double	AMOUT = 27;
+	required int32	SID = 28;
+    required int32	Exchange = 29;			//1为上海，2为深圳
+	required string	Name = 30;	
+	required int32  Time = 31;
+
+} 
+
+
+message mREALQDINFO
+{
+	required int32	SID = 1;
+    required int32	Exchange = 2;			//1为上海，2为深圳
+	required string	Name = 3;
+	required int32	PRECLOSE = 4;
+	required int32	OPEN = 5;
+} 
+
+message mREALQDLONGBLOCK
+{
+	required int32	Time = 1;
+	required int32    TimeStamp = 2;
+	repeated mREALQDCACHELONG LongData = 3;
+} 
+
+
+
+message mREALQDLONGCACHE
+{
+	required int32	IsUsed = 1;
+	required int32	Date = 2;
+	required int32	SecNum = 3;
+	required mREALQDLONGBLOCK DataBlock = 4;
+	repeated mREALQDINFO SecInfo = 5;
+} 
+
+
+message mREQUEST
+{
+	required int32	SID = 1;
+    required int32	Exchange = 2;			//1为上海，2为深圳
+	required int32	StartDate = 3;
+	required int32	EndDate = 4;
+
+} 
+
+
+message mDailyQuote
+{
+	required int32 SID = 1;          //
+	required int32 Date = 2;          //
+	required int32 PreClose = 3;			//
+	required int32 Open = 4;		//
+    required int32 High = 5;
+    required int32 Low = 6;
+    required int32 Close = 7;
+	required double Volume = 8;        //
+	required double Amount = 9;			//
+	required double AdjustingFactor = 10;		//
+	required double Return = 11;
+} 
+
+
+message mFSP
+{
+	required int32	iSID = 1;
+    required int32	iDDJ = 2;	
+	required int32	iDCQ = 3;
+	required double	dPGS = 4;
+	required double	dPGJ = 5;
+	required double	dSGS = 6;
+	required double	dPXS = 7;
+	required double	dZZS = 8;
+}
+
+message QDailyQuote
+{
+	repeated mDailyQuote qDailyQuote = 1;
+}
+
+
+message mQDFILEBLOCK
+{
+	required int32 dwTime = 1;						//该记录的时间
+	required int32 dwTimeStamp = 2;
+} 
+
+message QHFData
+{
+	repeated  mQDFILEBLOCK FILEBLOCK  = 1;
+	repeated  mQDCACHE CACHELONG = 2;
+}
+
+message QData
+{
+    repeated int32 qDate = 1;
+}
+
+
+message QFSP
+{
+	repeated mFSP qFSP = 1;
+}
+
+
+
+message mQD
+{
+	required int32 	Date = 1;
+	required int32 	SecNum = 2;
+	repeated mQDCACHE DataBlock = 3;
+}
+
+message QQuoteDataIO
+{
+	required int32	StampIndex = 1;			//时间戳
+	required mQD    QuoteData  = 2;			//行情,其中指针变成相对Buffer的偏移量
+}
+
+
+
+message mK
+{
+	required int32 	Date = 1;
+	required int32 	Time = 2;
+	required int32 	Open = 3;
+	required int32 	High = 4;
+	required int32 	Low = 5;
+	required int32 	Close = 6;
+	required int32 	SID = 7;
+	required int32 	Exchange = 8;
+}
+
+message QQD
+{
+	required int32 	SecNum = 1;
+	repeated int32 	DateList = 2;
+	repeated mK mmK = 3;
+}
+
+
+message mQDSECINFO
+{
+	required int32 Exchange = 1;					//1 for sh	2 for sz 
+	required int32 SID = 2;						//股票代码
+}
+
+message QQDSECINFO
+{
+	repeated mQDSECINFO mmQDSECINFO = 1;
+}
+

@@ -1,0 +1,98 @@
+
+®
+FutureData.protoFutureDataPB"ù
+$CThostFtdcDepthMarketDataFieldStruct
+
+TradingDay (	
+InstrumentID (	
+
+ExchangeID (	
+ExchangeInstID (	
+	LastPrice (
+PreSettlementPrice (
+PreClosePrice (
+PreOpenInterest (
+	OpenPrice	 (
+HighestPrice
+ (
+LowestPrice (
+Volume (
+Turnover (
+OpenInterest (
+
+ClosePrice (
+SettlementPrice (
+UpperLimitPrice (
+LowerLimitPrice (
+PreDelta (
+	CurrDelta (
+
+UpdateTime (	
+UpdateMillisec (
+	BidPrice1 (
+
+BidVolume1 (
+	AskPrice1 (
+
+AskVolume1 (
+	BidPrice2 (
+
+BidVolume2 (
+	AskPrice2 (
+
+AskVolume2 (
+	BidPrice3 (
+
+BidVolume3  (
+	AskPrice3! (
+
+AskVolume3" (
+	BidPrice4# (
+
+BidVolume4$ (
+	AskPrice4% (
+
+AskVolume4& (
+	BidPrice5' (
+
+BidVolume5( (
+	AskPrice5) (
+
+AskVolume5* (
+AveragePrice+ ("“
+
+FutureData
+	Timestamp (
+Handle (5
+DataPack (2#.FutureDataPB.FutureData.MarketDataj
+
+MarketData
+Date (
+Time (@
+Data (22.FutureDataPB.CThostFtdcDepthMarketDataFieldStruct"∫
+CurrentDataRequest
+	TimeStamp (
+Handle (C
+ContractList (2-.FutureDataPB.CurrentDataRequest.ContractInfo<
+ContractInfo
+Date (
+Time (
+Contract (	"Ë
+HistoryDataRequest
+	TimeStamp (
+Handle (B
+DataInfo (20.FutureDataPB.HistoryDataRequest.HistoryDataInfok
+HistoryDataInfo
+Contract (	
+	StartDate (
+	StartTime (
+EndDate (
+EndTime ("Ë
+HistoryDataResponse
+	Timestamp (
+Handle (F
+
+DataSeries (22.FutureDataPB.HistoryDataResponse.MarketDataSeriesf
+MarketDataSeries
+Contract (	@
+Data (22.FutureDataPB.CThostFtdcDepthMarketDataFieldStruct

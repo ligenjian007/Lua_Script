@@ -1,0 +1,18 @@
+package LuaScriptPB;
+
+message LScriptRequest{
+	message call{
+		required int32 scriptNo=1;  
+		required int32 RepeateTime=2 [default = 1];
+		required string content=3;
+	}
+	repeated call requests= 1;
+}
+
+message LScriptResponse{
+	message result{
+		required int32 scriptNo=1;
+		required int32 content=2;
+		}
+	repeated result responses = 1;
+}
