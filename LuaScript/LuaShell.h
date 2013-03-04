@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "interface.h"
+#include ".\VirtualCloudServer\interface.h"
 #include <vector>
 #include "HSComm.pb.h"
 #include <string>
@@ -34,7 +34,8 @@ public:
 	~LuaClass(){};
 	int	Init(string serverAddress="127.0.0.1", int cmdPort=12298, int dataPort=12299);
 	int	execute(int port,string filename); //the first parameter is the coroutine to execute the file (second parameter)
-	int	executeMain(string filename); 
+	int	executeMain(string filename);
+	string executeScript(string script);
 	static void* svrAddr;
 	static void* usrName;
 	static void* hvcClient;
@@ -67,8 +68,12 @@ public:
 	static void CallBack_history_data_test(CCHANDLE pSender, IOPCompleteArgs *pIOP);
 	static int LuaF_history_beta(lua_State *pState);
 	static void CallBack_history_beta(CCHANDLE pSender, IOPCompleteArgs *pIOP);
+	static int LuaF_history_data(lua_State *pState);
+	static void CallBack_history_data(CCHANDLE pSender, IOPCompleteArgs *pIOP);
+	static char result_text[2048];
 
 private:
 	static void box_userdata(lua_State *pState,char slot_name[20],void* & userdata);
 	static void unbox_userdata(lua_State *pState,char slot_name[20],void* & userdata);
+
 };

@@ -12,7 +12,7 @@ message LScriptRequest{
 message LScriptResponse{
 	message result{
 		required int32 scriptNo=1;
-		required int32 content=2;
+		required string content=2;
 		}
 	repeated result responses = 1;
 }

@@ -1,0 +1,28 @@
+package VirtualDriverFramePB;
+
+message VirtualDriverDevice
+{
+	required int32 FuncID=1 [default=0];
+	required int32 Location=2 [default=0];
+	required int32 Sync=3 [default=0];
+	optional bytes DriverName=4 [default=""];
+	optional bytes DeviceName=5 [default=""];
+}
+
+message VirtualDriverFrame
+{
+	required bytes Version=1 [default=""];
+	required uint32 UID=2 [default=0];
+	required uint32 CSUID=3 [default=0];
+	required VirtualDriverDevice ReqDev=4;
+	required int32 MajorCmd=5 [default=0];
+	required int32 MinorCmd=6 [default=0];
+	optional int32 TimeOut=7 [default=3000];
+	required bytes Username=8 [default=""];
+	required bytes Password=9 [default=""];
+	optional uint32 RequestQueueHandle=10 [default=0];
+	optional int32 StateCode=11 [default=0];
+	optional int32 ErrorCode=12 [default=0];
+	optional bytes ErrorInfo=13 [default=""];
+	optional bytes Body=51 [default=""];
+}

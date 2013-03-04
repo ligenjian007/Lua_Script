@@ -525,9 +525,9 @@ class CThostFtdcDepthMarketDataFieldStruct : public ::google::protobuf::Message 
   double openinterest_;
   double closeprice_;
   double settlementprice_;
+  double upperlimitprice_;
   ::google::protobuf::int32 volume_;
   ::google::protobuf::int32 updatemillisec_;
-  double upperlimitprice_;
   double lowerlimitprice_;
   double predelta_;
   double currdelta_;

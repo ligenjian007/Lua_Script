@@ -1,8 +1,8 @@
 co1=coroutine.create(
 function()
 print("hello world")
-bool,history=history_data()
-print(bool,history.open_price,history.askprice1)
+bool,history=history_data("IF1302",20130124,134000,20130124,143000)
+print(bool,history.openprice,history.askprice1)
 end)
 
 co2=coroutine.create(

@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\Lua\src;.\pdep;..\Lua\include;..;..\protobuf;..\protobuf\include;..\Lua"
+				AdditionalIncludeDirectories="..\Lua\src;..\LuaScript\pdep;..\Lua\include;..\protobuf;..\Lua;..\protobuf\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,9 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libVirtualCloudClientSharpWrapper.lib libVirtualCloudServerSharpWrapper.lib lua5.1.lib libprotobuf.lib libprotoc.lib"
+				AdditionalDependencies="libVirtualCloudServerSharpWrapper.lib lua5.1.lib libprotobuf.lib libprotoc.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\Debug;..\Lua;..\protobuf;..\protobuf\Debug"
+				AdditionalLibraryDirectories=".\VirtualCloudServer;..\Lua;..\protobuf;..\protobuf\Debug;..\Debug"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -235,6 +235,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\ScriptPB.pb.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -253,6 +257,10 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\VirtualDriverFrame.pb.cc"
+				>
 			</File>
 		</Filter>
 		<Filter
@@ -293,11 +301,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ScriptPB.pb.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VirtualDriverFrame.pb.h"
 				>
 			</File>
 		</Filter>
@@ -306,37 +322,37 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\FutureData.proto"
-				>
-			</File>
-			<File
-				RelativePath="..\protobuf\HSComm.proto"
-				>
-			</File>
-			<File
-				RelativePath=".\lib.lua"
-				>
-			</File>
-			<File
-				RelativePath="..\Lua\src\lua51.dll"
-				>
-			</File>
-			<File
-				RelativePath="..\Lua\src\lua51.lib"
-				>
-			</File>
-			<File
-				RelativePath="..\protobuf\SATDataPB.proto"
-				>
-			</File>
-			<File
-				RelativePath=".\test.lua"
-				>
-			</File>
 		</Filter>
 		<File
+			RelativePath=".\FutureData.proto"
+			>
+		</File>
+		<File
+			RelativePath="..\protobuf\HSComm.proto"
+			>
+		</File>
+		<File
+			RelativePath=".\lib.lua"
+			>
+		</File>
+		<File
+			RelativePath=".\VirtualCloudServer\Debug\libVirtualCloudServerSharpWrapper.lib"
+			>
+		</File>
+		<File
+			RelativePath="..\Lua\src\lua51.dll"
+			>
+		</File>
+		<File
+			RelativePath="..\Lua\src\lua51.lib"
+			>
+		</File>
+		<File
 			RelativePath=".\ReadMe.txt"
+			>
+		</File>
+		<File
+			RelativePath="..\protobuf\SATDataPB.proto"
 			>
 		</File>
 		<File
@@ -344,7 +360,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\todo list.txt"
+			RelativePath=".\test.lua"
 			>
 		</File>
 	</Files>

@@ -2,8 +2,10 @@
 #include "LuaShell.h"
 #include <iostream>
 #include <windows.h>
+#include <fstream>
 
 //#define USER_DATA_ON
+#define HISTORY_PAPA_ON
 
 using namespace std;
 
@@ -11,17 +13,21 @@ using namespace std;
 void* LuaClass::svrAddr;
 void* LuaClass::hvcClient;
 void* LuaClass::hstrClient;
+char LuaClass::result_text[2048];
 
 LuaClass::LuaClass()
 {
-	this->svrAddr=(void*)malloc(sizeof(char));
-	this->hvcClient=(void*)malloc(sizeof(char));
-	this->hstrClient=(void*)malloc(sizeof(char));
+	if (this->svrAddr==NULL)
+		this->svrAddr=(void*)malloc(sizeof(char));
+	if (this->hvcClient==NULL)
+		this->hvcClient=(void*)malloc(sizeof(char));
+	if (this->hstrClient==NULL)
+		this->hstrClient=(void*)malloc(sizeof(char));
 	/*
 	this->usrName=(void*)malloc(sizeof(char));
 	*/
 //	this->Init();
-	}
+}
 
 
 int	LuaClass::Init(string serverAddress, int cmdPort, int dataPort)
@@ -49,13 +55,13 @@ int	LuaClass::Init(string serverAddress, int cmdPort, int dataPort)
 	lua_register(pMainShell,"query_entrust",shell_query_entrust);//query_entrust(account,password,entrustno,queryOnlyCancelable,requestNumber,lastPositionString)
 	lua_register(pMainShell,"query_orders",shell_query_orders);
 	lua_register(pMainShell,"query_capital",shell_query_capital);
-	lua_register(pMainShell,"history_data",LuaF_history_data_test);
+	lua_register(pMainShell,"history_data",LuaF_history_data);
 	lua_register(pMainShell,"sleep",shell_sleep);
 	
 	nSend=nRecv=nSucc=nFail=0;
 
-	hVirtualCloudClient=CreateVirtualCloudClient();
-	hHistoryCloudClient=CreateVirtualCloudClient();
+	hVirtualCloudClient=CreateVirtualCloudServer();
+	hHistoryCloudClient=CreateVirtualCloudServer();
 
 	box_userdata(pMainShell,"hvcClient",hVirtualCloudClient);
 	box_userdata(pMainShell,"hstrClient",hHistoryCloudClient);
@@ -92,21 +98,58 @@ void LuaClass::unbox_userdata(lua_State *pState,char slot_name[20],void* & userd
 
 int LuaClass::executeMain(string filename)
 {
+
 	int iError;
 	iError = luaL_loadfile(pMainShell, filename.c_str());  
 	if (iError)
 	{
-		cout << "Load test script FAILED!" << lua_tostring(pMainShell, -1)<< endl;  
+		sprintf(result_text,"Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
 		lua_close(pMainShell);
 		return 0;
 	}
 	iError = lua_pcall(pMainShell, 0, 0, 0);
 	if (iError)
 	{
-		cout<< "Load test script FAILED!"<< lua_tostring(pMainShell,-1)<< endl;
+		sprintf(result_text,"Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
 		return 0;
 	}
 	return 1;
+}
+
+
+string LuaClass::executeScript(string script)
+{
+
+	int iError;
+	string pre_code;
+	FILE *out;
+	ofstream code("full.code");
+
+	pre_code.append("result_out=io.open(\"result_text_file.res\",\"a\")\n");
+	pre_code.append(script);
+	code<<pre_code;
+	
+	iError=luaL_loadfile(pMainShell,"full.code");
+	if (iError)
+	{
+		sprintf(result_text,"Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
+		lua_close(pMainShell);
+		return result_text;
+	}
+	iError = lua_pcall(pMainShell, 0, 0, 0);
+	if (iError)
+	{
+		sprintf(result_text,"Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
+		return result_text;
+	}
+	out=fopen("result_text_file.res","r");
+	char buf[200];
+	while (fscanf(out,"%s",buf)!=0)
+	{
+		strcat(result_text,buf);
+		strcat(result_text,"\n");
+	}
+	return result_text;
 }
 
 int LuaClass::shell_sleep(lua_State *pState)
@@ -161,14 +204,15 @@ int LuaClass::shell_connect(lua_State *pState)
 	return 2;
 }
 
-
 /*
 	the function entrust is called with the function entrust.
 	entrust(account,password,stockcode,entrustamount,entrustprice)
 	entrust(string,string,string,int,int)
 */
+
 int LuaClass::shell_entrust(lua_State *pState)
 {
+
 	CCHANDLE hVirtualCloudClient;
 	DWORD nSend,nRecv,nSucc,nFail;
 
@@ -176,7 +220,7 @@ int LuaClass::shell_entrust(lua_State *pState)
 	
 	unbox_userdata(pState,"hvcClient",hVirtualCloudClient);
 
-	/*set arguements of postIO*/
+	//set arguements of postIO
 	int FuncID=13250;
 	int Location=3;
 	int Sync=2;
@@ -197,7 +241,7 @@ int LuaClass::shell_entrust(lua_State *pState)
 	char outstr[1000];
 	ZeroMemory(outstr,1000);
 
-	/*fill in the request data */
+	//fill in the request data 
 	entrustStockRequest *data=new entrustStockRequest();
 	entrustStockRequest_call *req=data->add_requests();
 
@@ -226,7 +270,7 @@ int LuaClass::shell_entrust(lua_State *pState)
 	data->SerializeWithCachedSizesToArray(pInBuffer);
 
 	lua_State *usrdata=pState;
-	/*post the request and wait for callback */
+	//post the request and wait for callback 
 	CTime t;
 	t=CTime::GetCurrentTime();
 	if(!PostIO(hVirtualCloudClient, FuncID, Location, Sync, DriverName, DeviceName, Object, MajorCmd, MinorCmd, pInBuffer, InBufferLen, (PIOCOMP)CallBack_Entrust, usrdata ,300000))
@@ -268,6 +312,7 @@ void LuaClass::CallBack_Entrust(CCHANDLE pSender, IOPCompleteArgs *pIOP)
 
 int LuaClass::shell_query_entrust(lua_State *pState)
 {
+
 	CCHANDLE hVirtualCloudClient;
 	DWORD nSend,nRecv,nSucc,nFail;
 
@@ -328,6 +373,7 @@ int LuaClass::shell_query_entrust(lua_State *pState)
 
 void LuaClass::CallBack_Query_entrust(CCHANDLE pSender, IOPCompleteArgs *pIOP)
 {
+
 	queryEntrustResponse response;
 	response.ParsePartialFromArray(pIOP->pOutBuffer,pIOP->OutBufferLen);
 	queryEntrustResponse_result result=response.responses(0);
@@ -371,6 +417,7 @@ void LuaClass::CallBack_Query_entrust(CCHANDLE pSender, IOPCompleteArgs *pIOP)
 
 int LuaClass::shell_query_orders(lua_State *pState)
 {
+
 	CCHANDLE hVirtualCloudClient;
 	DWORD nSend,nRecv,nSucc,nFail;
 
@@ -427,6 +474,7 @@ int LuaClass::shell_query_orders(lua_State *pState)
 
 void LuaClass::CallBack_Query_orders(CCHANDLE pSender, IOPCompleteArgs *pIOP)
 {
+
 	queryOrdersResponse response;
 	response.ParsePartialFromArray(pIOP->pOutBuffer,pIOP->OutBufferLen);
 	queryOrdersResponse_result result=response.responses(0);
@@ -562,6 +610,7 @@ void LuaClass::CallBack_Query_capital(CCHANDLE pSender, IOPCompleteArgs *pIOP)
 
 int LuaClass::LuaF_history_data_test(lua_State *pState)
 {
+
 	CCHANDLE hVirtualCloudClient;
 	DWORD nSend,nRecv,nSucc,nFail;
 
@@ -639,3 +688,216 @@ void LuaClass::CallBack_history_data_test(CCHANDLE pSender, IOPCompleteArgs *pIO
 	lua_resume(L,2);
 }
 
+
+int LuaClass::LuaF_history_data(lua_State *pState)
+{
+
+	CCHANDLE hVirtualCloudClient;
+	DWORD nSend,nRecv,nSucc,nFail;
+
+	nSend=nRecv=nSucc=nFail=0;
+
+	
+	lua_pushlightuserdata(pState, (void*)hstrClient);
+	lua_gettable(pState, LUA_REGISTRYINDEX);
+	hVirtualCloudClient=(void*)lua_touserdata(pState,-1);
+
+	//set arguements of postIO
+	int FuncID=102;
+	int Location=3;
+	int Sync=2;
+	char DriverName[]="";
+	char DeviceName[]="";
+	unsigned int Object=0;
+	int MajorCmd=115;
+	int MinorCmd=1;
+	unsigned char *pInBuffer;
+	unsigned int InBufferLen=0;
+	unsigned char *pOutBuffer=NULL;
+	unsigned int OutBufferLen=0;
+	unsigned char *pErrorInfo=NULL;
+	unsigned int ErrorInfoLen=0;
+	unsigned int ErrorCode=0;
+	IOState StateCode=IO_STATE_NONE;
+	DWORD nHandle=0;
+	char outstr[1000];
+	ZeroMemory(outstr,1000);
+
+	//fill in the request data 
+	HistoryDataRequest *data=new HistoryDataRequest;
+	data->set_timestamp(0);
+	data->set_handle(0);
+	HistoryDataRequest_HistoryDataInfo *HistoryDataInfo=data->add_datainfo();
+
+#ifdef HISTORY_PAPA_ON
+	HistoryDataInfo->set_contract(lua_tostring(pState,1));
+	HistoryDataInfo->set_startdate(lua_tointeger(pState,2));
+	HistoryDataInfo->set_starttime(lua_tointeger(pState,3));
+	HistoryDataInfo->set_enddate(lua_tointeger(pState,4));
+	HistoryDataInfo->set_endtime(lua_tointeger(pState,5));
+
+#else
+	HistoryDataInfo->set_contract("IF1302");
+	HistoryDataInfo->set_startdate(20130124);
+	HistoryDataInfo->set_starttime(134000);
+	HistoryDataInfo->set_enddate(20130124);
+	HistoryDataInfo->set_endtime(143000);
+#endif
+	InBufferLen=data->ByteSize();
+	pInBuffer=(unsigned char*)malloc(data->ByteSize());
+	data->SerializeWithCachedSizesToArray(pInBuffer);
+
+	lua_State *usrdata=pState;
+	//post the request and wait for callback 
+	CTime t;
+	t=CTime::GetCurrentTime();
+	if(!PostIO(hVirtualCloudClient, FuncID, Location, Sync, DriverName, DeviceName, Object, MajorCmd, MinorCmd, pInBuffer, InBufferLen, (PIOCOMP)CallBack_history_data_test, usrdata ,300000))
+	{
+		printf("%02d%02d%02d: PostIO  Request:%s Error\n",t.GetHour(),t.GetMinute(),t.GetSecond(),pInBuffer);
+	}
+//	delete data;
+	return lua_yield(pState,0);
+}
+
+void LuaClass::CallBack_history_data(CCHANDLE pSender, IOPCompleteArgs *pIOP)
+{
+	HistoryDataResponse response;
+	response.ParsePartialFromArray(pIOP->pOutBuffer,pIOP->OutBufferLen);
+	HistoryDataResponse_MarketDataSeries MarketDataSeries=response.dataseries(0);
+	CThostFtdcDepthMarketDataFieldStruct data=MarketDataSeries.data(0);
+	
+	lua_State *L=(lua_State*)(pIOP->UserData);
+	lua_pushboolean(L,true);
+	lua_newtable(L);
+	lua_pushstring(L,"tradingday");
+	lua_pushstring(L,data.tradingday().c_str());
+	lua_settable(L,-3);
+	lua_pushstring(L,"instrumentid");
+	lua_pushstring(L,data.instrumentid().c_str());
+	lua_settable(L,-3);
+	lua_pushstring(L,"exchangeid");
+	lua_pushstring(L,data.exchangeid().c_str());
+	lua_settable(L,-3);
+	lua_pushstring(L,"exchangeinstid");
+	lua_pushstring(L,data.exchangeinstid().c_str());
+	lua_settable(L,-3);
+	lua_pushstring(L,"lastprice");
+	lua_pushnumber(L,data.lastprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"presettlementprice");
+	lua_pushnumber(L,data.presettlementprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"precloseprice");
+	lua_pushnumber(L,data.precloseprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"preopeninterest");
+	lua_pushnumber(L,data.preopeninterest());
+	lua_settable(L,-3);
+	lua_pushstring(L,"openprice");
+	lua_pushnumber(L,data.openprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"highestprice");
+	lua_pushnumber(L,data.highestprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"lowestprice");
+	lua_pushnumber(L,data.lowestprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"volume");
+	lua_pushinteger(L,data.volume());
+	lua_settable(L,-3);
+	lua_pushstring(L,"turnover");
+	lua_pushnumber(L,data.turnover());
+	lua_settable(L,-3);
+	lua_pushstring(L,"openinterest");
+	lua_pushnumber(L,data.openinterest());
+	lua_settable(L,-3);
+	lua_pushstring(L,"closeprice");
+	lua_pushnumber(L,data.closeprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"settlementprice");
+	lua_pushnumber(L,data.settlementprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"upperlimitprice");
+	lua_pushnumber(L,data.upperlimitprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"lowerlimitprice");
+	lua_pushnumber(L,data.lowerlimitprice());
+	lua_settable(L,-3);
+	lua_pushstring(L,"predelta");
+	lua_pushnumber(L,data.predelta());
+	lua_settable(L,-3);
+	lua_pushstring(L,"currdelta");
+	lua_pushnumber(L,data.currdelta());
+	lua_settable(L,-3);
+	lua_pushstring(L,"updatetime");
+	lua_pushstring(L,data.updatetime().c_str());
+	lua_settable(L,-3);
+	lua_pushstring(L,"updatemillisec");
+	lua_pushnumber(L,data.updatemillisec());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidprice1");
+	lua_pushnumber(L,data.bidprice1());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidprice2");
+	lua_pushnumber(L,data.bidprice2());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidprice3");
+	lua_pushnumber(L,data.bidprice3());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidprice4");
+	lua_pushnumber(L,data.bidprice4());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidprice5");
+	lua_pushnumber(L,data.bidprice5());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askprice1");
+	lua_pushnumber(L,data.askprice1());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askprice2");
+	lua_pushnumber(L,data.askprice2());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askprice3");
+	lua_pushnumber(L,data.askprice3());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askprice4");
+	lua_pushnumber(L,data.askprice4());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askprice5");
+	lua_pushnumber(L,data.askprice5());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidvolume1");
+	lua_pushinteger(L,data.bidvolume1());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidvolume2");
+	lua_pushinteger(L,data.bidvolume2());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidvolume3");
+	lua_pushinteger(L,data.bidvolume3());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidvolume4");
+	lua_pushinteger(L,data.bidvolume4());
+	lua_settable(L,-3);
+	lua_pushstring(L,"bidvolume5");
+	lua_pushinteger(L,data.bidvolume5());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askvolume1");
+	lua_pushinteger(L,data.askvolume1());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askvolume2");
+	lua_pushinteger(L,data.askvolume2());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askvolume3");
+	lua_pushinteger(L,data.askvolume3());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askvolume4");
+	lua_pushinteger(L,data.askvolume4());
+	lua_settable(L,-3);
+	lua_pushstring(L,"askvolume5");
+	lua_pushinteger(L,data.askvolume5());
+	lua_settable(L,-3);
+	lua_pushstring(L,"averageprice");
+	lua_pushnumber(L,data.averageprice());
+	lua_settable(L,-3);
+
+	lua_resume(L,2);
+}
