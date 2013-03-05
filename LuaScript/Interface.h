@@ -6,6 +6,8 @@
     #define CCAPI __declspec(dllimport)
 #endif
 
+#ifndef SERVER_H_
+
 typedef void * CCHANDLE;
 struct tagIOPCompleteArgs;
 typedef struct tagIOPCompleteArgs IOPCompleteArgs;
@@ -118,3 +120,5 @@ CCAPI void SetVitrualMinorCmd(CCHANDLE hVirtualCloudClient, int VitrualMinorCmd)
 CCAPI bool Subscribe(CCHANDLE hVirtualCloudClient,CCHANDLE pSender,DWORD &RequestQueueHandle,int FuncID, int Location, int Sync, char* DriverName, char* DeviceName, int MajorCmd,int MinorCmd, int SubscribingMajorCmd,int SubscribingMinorCmd , PIOCOMPEX pNotifier,unsigned char *pInBuffer, unsigned int InBufferLen,unsigned char* &pErrorInfo,unsigned int &ErrorInfoLen, unsigned int &ErrorCode,bool NewHandle=false);
 CCAPI bool Unsubscribe(CCHANDLE hVirtualCloudClient,DWORD RequestQueueHandle,int FuncID, int Location, int Sync, char* DriverName, char* DeviceName, int MajorCmd, int MinorCmd, int UnsubscribingMajorCmd,int UnsubscribingMinorCmd, unsigned char* &pErrorInfo,unsigned int &ErrorInfoLen, unsigned int &ErrorCode);
 CCAPI void SetReservedSubscribingPackageCount(CCHANDLE hVirtualCloudClient,int ReservedSubscribingPackageCount);
+
+#endif

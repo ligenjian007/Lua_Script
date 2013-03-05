@@ -2,7 +2,8 @@
 //
 
 #include "stdafx.h"
-#include ".\VirtualCloudServer\interface.h"
+//#include ".\VirtualCloudServer\interface.h"
+#include "interface.h"
 #include <vector>
 #include "HSComm.pb.h"
 #include <string>

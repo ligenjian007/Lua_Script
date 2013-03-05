@@ -1,12 +1,13 @@
 #include "stdafx.h"
-#include "LuaShell.h"
-//#include "Script.pb.h"
-//#include "interface.h"
+#include "ScriptPB.pb.h"
+#define SERVER_H_
 #include ".\VirtualCloudServer\interface.h"
+#include "LuaShell.h"
+#include "interface.h"
 #include "VirtualDriverFrame.pb.h"
 #include "ScriptPB.pb.h"
 
-//#define TEST_SERVER
+#define TEST_SERVER
 
 #ifdef TEST_SERVER
 

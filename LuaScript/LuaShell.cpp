@@ -60,8 +60,8 @@ int	LuaClass::Init(string serverAddress, int cmdPort, int dataPort)
 	
 	nSend=nRecv=nSucc=nFail=0;
 
-	hVirtualCloudClient=CreateVirtualCloudServer();
-	hHistoryCloudClient=CreateVirtualCloudServer();
+	hVirtualCloudClient=CreateVirtualCloudClient();
+	hHistoryCloudClient=CreateVirtualCloudClient();
 
 	box_userdata(pMainShell,"hvcClient",hVirtualCloudClient);
 	box_userdata(pMainShell,"hstrClient",hHistoryCloudClient);
@@ -123,11 +123,15 @@ string LuaClass::executeScript(string script)
 	int iError;
 	string pre_code;
 	FILE *out;
-	ofstream code("full.code");
+	ofstream code;
 
-	pre_code.append("result_out=io.open(\"result_text_file.res\",\"a\")\n");
-	pre_code.append(script);
-	code<<pre_code;
+	code.open("full.code",ios::out | ios::trunc);
+
+	code<<"result_out=io.open(\"result_text_file.res\",\"w+\")"<<endl;
+	code<<script<<endl;
+	code<<pre_code<<endl;
+	code<<"result_out:close()"<<endl;
+	code.close();
 	
 	iError=luaL_loadfile(pMainShell,"full.code");
 	if (iError)
@@ -144,7 +148,7 @@ string LuaClass::executeScript(string script)
 	}
 	out=fopen("result_text_file.res","r");
 	char buf[200];
-	while (fscanf(out,"%s",buf)!=0)
+	while (fscanf(out,"%s",buf)>0)
 	{
 		strcat(result_text,buf);
 		strcat(result_text,"\n");
@@ -706,8 +710,8 @@ int LuaClass::LuaF_history_data(lua_State *pState)
 	int FuncID=102;
 	int Location=3;
 	int Sync=2;
-	char DriverName[]="";
-	char DeviceName[]="";
+	char DriverName[]="CloudServer_CTPFuturesQuote";
+	char DeviceName[]="CloudServer_CTPFuturesQuote";
 	unsigned int Object=0;
 	int MajorCmd=115;
 	int MinorCmd=1;
@@ -751,7 +755,7 @@ int LuaClass::LuaF_history_data(lua_State *pState)
 	//post the request and wait for callback 
 	CTime t;
 	t=CTime::GetCurrentTime();
-	if(!PostIO(hVirtualCloudClient, FuncID, Location, Sync, DriverName, DeviceName, Object, MajorCmd, MinorCmd, pInBuffer, InBufferLen, (PIOCOMP)CallBack_history_data_test, usrdata ,300000))
+	if(!PostIO(hVirtualCloudClient, FuncID, Location, Sync, DriverName, DeviceName, Object, MajorCmd, MinorCmd, pInBuffer, InBufferLen, (PIOCOMP)CallBack_history_data, usrdata ,300000))
 	{
 		printf("%02d%02d%02d: PostIO  Request:%s Error\n",t.GetHour(),t.GetMinute(),t.GetSecond(),pInBuffer);
 	}

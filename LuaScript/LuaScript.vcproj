@@ -62,9 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libVirtualCloudServerSharpWrapper.lib lua5.1.lib libprotobuf.lib libprotoc.lib"
+				AdditionalDependencies="libVirtualCloudServerSharpWrapper.lib libVirtualCloudClientSharpWrapper.lib lua5.1.lib libprotobuf.lib libprotoc.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\VirtualCloudServer;..\Lua;..\protobuf;..\protobuf\Debug;..\Debug"
+				AdditionalLibraryDirectories=".\VirtualCloudServer;..\Lua;..\protobuf;..\protobuf\Debug;..\Debug;C:\Users\Administrator\Desktop\lgj\Lua_Script\Debug"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
