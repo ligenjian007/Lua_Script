@@ -324,6 +324,10 @@
 			>
 		</Filter>
 		<File
+			RelativePath=".\correlation.lua"
+			>
+		</File>
+		<File
 			RelativePath=".\FutureData.proto"
 			>
 		</File>

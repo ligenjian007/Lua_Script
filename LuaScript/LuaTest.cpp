@@ -7,7 +7,7 @@
 #include "VirtualDriverFrame.pb.h"
 #include "ScriptPB.pb.h"
 
-#define TEST_SERVER
+//#define TEST_SERVER
 
 #ifdef TEST_SERVER
 
@@ -243,7 +243,7 @@ int main()
 {
 	LuaClass *shell=new LuaClass();
 	shell->Init();
-	shell->executeMain("test.lua");
+	shell->executeMain("correlation.lua");
 	return 0;
 }
 

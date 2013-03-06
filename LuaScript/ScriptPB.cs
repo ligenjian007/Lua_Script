@@ -41,7 +41,7 @@ namespace LuaScriptPB {
           "dGVUaW1lGAIgAigFOgExEg8KB2NvbnRlbnQYAyACKAkidgoPTFNjcmlwdFJl" + 
           "c3BvbnNlEjYKCXJlc3BvbnNlcxgBIAMoCzIjLkx1YVNjcmlwdFBCLkxTY3Jp" + 
           "cHRSZXNwb25zZS5yZXN1bHQaKwoGcmVzdWx0EhAKCHNjcmlwdE5vGAEgAigF" + 
-          "Eg8KB2NvbnRlbnQYAiACKAU=");
+          "Eg8KB2NvbnRlbnQYAiACKAk=");
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_LuaScriptPB_LScriptRequest__Descriptor = Descriptor.MessageTypes[0];
@@ -786,7 +786,7 @@ namespace LuaScriptPB {
         private result() { }
         private static readonly result defaultInstance = new result().MakeReadOnly();
         private static readonly string[] _resultFieldNames = new string[] { "content", "scriptNo" };
-        private static readonly uint[] _resultFieldTags = new uint[] { 16, 8 };
+        private static readonly uint[] _resultFieldTags = new uint[] { 18, 8 };
         public static result DefaultInstance {
           get { return defaultInstance; }
         }
@@ -819,11 +819,11 @@ namespace LuaScriptPB {
         
         public const int ContentFieldNumber = 2;
         private bool hasContent;
-        private int content_;
+        private string content_ = "";
         public bool HasContent {
           get { return hasContent; }
         }
-        public int Content {
+        public string Content {
           get { return content_; }
         }
         
@@ -842,7 +842,7 @@ namespace LuaScriptPB {
             output.WriteInt32(1, field_names[1], ScriptNo);
           }
           if (hasContent) {
-            output.WriteInt32(2, field_names[0], Content);
+            output.WriteString(2, field_names[0], Content);
           }
           UnknownFields.WriteTo(output);
         }
@@ -858,7 +858,7 @@ namespace LuaScriptPB {
               size += pb::CodedOutputStream.ComputeInt32Size(1, ScriptNo);
             }
             if (hasContent) {
-              size += pb::CodedOutputStream.ComputeInt32Size(2, Content);
+              size += pb::CodedOutputStream.ComputeStringSize(2, Content);
             }
             size += UnknownFields.SerializedSize;
             memoizedSerializedSize = size;
@@ -1039,8 +1039,8 @@ namespace LuaScriptPB {
                   result.hasScriptNo = input.ReadInt32(ref result.scriptNo_);
                   break;
                 }
-                case 16: {
-                  result.hasContent = input.ReadInt32(ref result.content_);
+                case 18: {
+                  result.hasContent = input.ReadString(ref result.content_);
                   break;
                 }
               }
@@ -1076,11 +1076,12 @@ namespace LuaScriptPB {
           public bool HasContent {
             get { return result.hasContent; }
           }
-          public int Content {
+          public string Content {
             get { return result.Content; }
             set { SetContent(value); }
           }
-          public Builder SetContent(int value) {
+          public Builder SetContent(string value) {
+            pb::ThrowHelper.ThrowIfNull(value, "value");
             PrepareBuilder();
             result.hasContent = true;
             result.content_ = value;
@@ -1089,7 +1090,7 @@ namespace LuaScriptPB {
           public Builder ClearContent() {
             PrepareBuilder();
             result.hasContent = false;
-            result.content_ = 0;
+            result.content_ = "";
             return this;
           }
         }

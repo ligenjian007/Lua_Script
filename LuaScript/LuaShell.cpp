@@ -103,14 +103,14 @@ int LuaClass::executeMain(string filename)
 	iError = luaL_loadfile(pMainShell, filename.c_str());  
 	if (iError)
 	{
-		sprintf(result_text,"Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
+		printf("Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
 		lua_close(pMainShell);
 		return 0;
 	}
 	iError = lua_pcall(pMainShell, 0, 0, 0);
 	if (iError)
 	{
-		sprintf(result_text,"Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
+		printf("Load test script FAILED! %s",lua_tostring(pMainShell, -1));  
 		return 0;
 	}
 	return 1;
