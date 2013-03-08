@@ -328,6 +328,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\distance.lua"
+			>
+		</File>
+		<File
 			RelativePath=".\FutureData.proto"
 			>
 		</File>

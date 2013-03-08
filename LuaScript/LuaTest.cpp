@@ -243,7 +243,7 @@ int main()
 {
 	LuaClass *shell=new LuaClass();
 	shell->Init();
-	shell->executeMain("correlation.lua");
+	shell->executeMain("distance.lua");
 	return 0;
 }
 
