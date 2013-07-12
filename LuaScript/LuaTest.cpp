@@ -6,16 +6,17 @@
 #include "interface.h"
 #include "VirtualDriverFrame.pb.h"
 #include "ScriptPB.pb.h"
+#include <windows.h>
 
 //#define TEST_SERVER
 
-#ifdef TEST_SERVER
 
 CWinApp theApp;
 
 using namespace std;
 using namespace VirtualDriverFramePB;
 using namespace LuaScriptPB;
+extern bool forceCancel;
 
 void OnLuaMessage(CCHANDLE pSender, IOPCompleteArgs *pIOP,void *&pInBuffer,int &InBufferLen);
 
@@ -32,6 +33,8 @@ typedef struct tagRequestQueue
 vector<RequestQueue> vectRequestQueue;
 
 CRITICAL_SECTION lockRequestQueue;
+CRITICAL_SECTION lockBufString;
+
 CCHANDLE hVirtualCloudServer=NULL;
 bool bBeginProcess=false;
 
@@ -43,6 +46,7 @@ BOOL _ExitFlag = 0;
 
 LuaClass luaShell;
 
+#ifdef TEST_SERVER
 
 BOOL WINAPI ConsoleHandler(DWORD msgType)
 {
@@ -93,6 +97,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	CWinThread*   pThread;
 	SetConsoleCtrlHandler(ConsoleHandler, TRUE);
 	InitializeCriticalSection(&lockRequestQueue);
+	InitializeCriticalSection(&lockBufString);
 	hVirtualCloudServer=CreateVirtualCloudServer();
 	if(hVirtualCloudServer==NULL)return -1;
 
@@ -160,14 +165,39 @@ void OnLuaMessage(CCHANDLE pSender, IOPCompleteArgs *pIOP,void *&pInBuffer,int &
 		LScriptRequest lua_req;
 		lua_req.ParseFromArray(tempFrame.body().c_str(),tempFrame.body().size());
 		string script=lua_req.requests(0).content();
+		if (lua_req.requests(0).scriptno()!=0 && lua_req.requests(0).scriptno()!=-1)
+		{
+			forceCancel=false;
+			LScriptResponse rsp;
+			LScriptResponse_result *result=rsp.add_responses();
+			result->set_content(luaShell.executeScript(script));
+			result->set_scriptno(lua_req.requests(0).scriptno());
+			InBufferLen=rsp.ByteSize();
+			pInBuffer=new BYTE[InBufferLen];
+			rsp.SerializeWithCachedSizesToArray((unsigned char*)(pInBuffer));
+		}
+		else if (lua_req.requests(0).scriptno()==0)
+		{
+			while (LuaClass::buf_string_list.empty())
+				Sleep(800);
+			EnterCriticalSection(&lockBufString);
+			LScriptResponse rsp;
+			LScriptResponse_result *result=rsp.add_responses();
+			result->set_content(LuaClass::buf_string_list.begin()->c_str());
+			LuaClass::buf_string_list.pop_front();
+			result->set_scriptno(lua_req.requests(0).scriptno());
+			InBufferLen=rsp.ByteSize();
+			pInBuffer=new BYTE[InBufferLen];
+			rsp.SerializeWithCachedSizesToArray((unsigned char*)(pInBuffer));
+			LeaveCriticalSection(&lockBufString);
+		}
+		else if (lua_req.requests(0).scriptno()==-1)
+		{
+			forceCancel=true;
+			Sleep(10000);
+			LuaClass::LuaF_future_entrust_callback3();
+		}
 
-		LScriptResponse rsp;
-		LScriptResponse_result *result=rsp.add_responses();
-		result->set_content(luaShell.executeScript(script));
-		result->set_scriptno(lua_req.requests(0).scriptno());
-		InBufferLen=rsp.ByteSize();
-		pInBuffer=new BYTE[InBufferLen];
-		rsp.SerializeWithCachedSizesToArray((unsigned char*)(pInBuffer));
 	}
 }
 
@@ -192,7 +222,7 @@ UINT ProcessRequest(LPVOID lpParam)
 				Request=new char[Length+1];
 				Response=new char[Length+1];
 				ZeroMemory(Request,Length+1);
-				ZeroMemory(Response,Length+1);
+				ZeroMemory(Response,Length+1); 
 				BYTE * pBuffer=NULL;
 				int nBufferLen;	
 				pBuffer=new BYTE[iter->InBufferLen];
@@ -243,7 +273,7 @@ int main()
 {
 	LuaClass *shell=new LuaClass();
 	shell->Init();
-	shell->executeMain("distance.lua");
+	shell->executeMain("test.lua");
 	return 0;
 }
 

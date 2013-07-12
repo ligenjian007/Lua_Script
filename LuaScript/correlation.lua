@@ -56,12 +56,13 @@ result_out:write(correlation(stock1,stock1),correlation(stock1,stock2),correlati
 result_out:write(correlation(stock2,stock1),correlation(stock2,stock2),correlation(stock2,stock3),correlation(stock2,stock4))
 result_out:write(correlation(stock3,stock1),correlation(stock3,stock2),correlation(stock3,stock3),correlation(stock3,stock4))
 result_out:write(correlation(stock4,stock1),correlation(stock4,stock2),correlation(stock4,stock3),correlation(stock4,stock4))
+print("finish write")
 end
 
-stockname1="IF302"
-stockname2="IF303"
-stockname3="IF306"
-stockname4="IF309"
+stockname1="IF1303"
+stockname2="IF1306"
+stockname3="IF1309"
+stockname4="IF1302"
 
 co=coroutine.create(stockcorrelation)
 coroutine.resume(co)

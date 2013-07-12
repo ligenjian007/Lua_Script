@@ -62,9 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libVirtualCloudServerSharpWrapper.lib libVirtualCloudClientSharpWrapper.lib lua5.1.lib libprotobuf.lib libprotoc.lib"
+				AdditionalDependencies="libVirtualCloudServerSharpWrapper.lib libVirtualCloudClientSharpWrapper.lib lua5.1.lib libprotobuf.lib libprotoc.lib thostmduserapi.lib thosttraderapi.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\VirtualCloudServer;..\Lua;..\protobuf;..\protobuf\Debug;..\Debug;C:\Users\Administrator\Desktop\lgj\Lua_Script\Debug"
+				AdditionalLibraryDirectories="C:\Users\Administrator\Desktop\lgj\Lua_Script\LuaScript\ThostTraderApi;.\VirtualCloudServer;..\Lua;..\protobuf;..\protobuf\Debug;..\Debug;.\ThostTraderApi"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MdSpi.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pdep.c"
 				>
 				<FileConfiguration
@@ -259,6 +263,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\TraderSpi.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VirtualDriverFrame.pb.cc"
 				>
 			</File>
@@ -297,6 +305,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MdSpi.h"
+				>
+			</File>
+			<File
 				RelativePath=".\pluto.h"
 				>
 			</File>
@@ -310,6 +322,10 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TraderSpi.h"
 				>
 			</File>
 			<File
@@ -369,6 +385,14 @@
 		</File>
 		<File
 			RelativePath=".\test.lua"
+			>
+		</File>
+		<File
+			RelativePath=".\ThostTraderApi\thostmduserapi.lib"
+			>
+		</File>
+		<File
+			RelativePath=".\ThostTraderApi\thosttraderapi.lib"
 			>
 		</File>
 	</Files>

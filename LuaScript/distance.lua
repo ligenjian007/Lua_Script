@@ -15,8 +15,8 @@ co=coroutine.create(
 	end
 )
 
-stockname1="IF302"
-stockname2="IF303"
-stockname3="IF306"
-stockname4="IF309"
+stockname1="IF1302"
+stockname2="IF1303"
+stockname3="IF1306"
+stockname4="IF1309"
 coroutine.resume(co)
