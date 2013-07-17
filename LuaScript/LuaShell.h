@@ -94,10 +94,14 @@ public:
 	static int luaF_getAskPrice(lua_State *pState);
 	static int luaF_getBidPrice(lua_State *pState);
 	static int luaF_Trade(lua_State *pState);
+	static int luaF_getBuyPrice(lua_State *pState);
+	static int luaF_getSellPrice(lua_State *pState);
+	static int luaF_breakPoint(lua_State *pState);
 	static void LuaF_future_entrust_callback1(TThostFtdcSequenceNoType,TThostFtdcOffsetFlagType,TThostFtdcDirectionType,TThostFtdcInstrumentIDType,TThostFtdcVolumeType,TThostFtdcPriceType,TThostFtdcBrokerIDType,TThostFtdcOrderRefType,TThostFtdcDateType,TThostFtdcTimeType);
 	static void LuaF_future_entrust_callback2(TThostFtdcSequenceNoType,TThostFtdcOffsetFlagType,TThostFtdcDirectionType,TThostFtdcInstrumentIDType,TThostFtdcVolumeType,TThostFtdcPriceType,TThostFtdcBrokerIDType,TThostFtdcOrderRefType,TThostFtdcDateType,TThostFtdcTimeType);
 	static void LuaF_future_entrust_callback3();
 	static int LuaF_future_entrust_para(lua_State *pState);
+	static void restart();
 	static char result_text[2048];
 	static list<string> buf_string_list;
 

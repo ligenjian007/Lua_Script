@@ -8,7 +8,7 @@
 #include "ScriptPB.pb.h"
 #include <windows.h>
 
-//#define TEST_SERVER
+#define TEST_SERVER
 
 
 CWinApp theApp;
@@ -91,8 +91,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	}
 
 
-	luaShell.Init();
-
+	
 	nRecv=nPreProcess=nAsyProcess=nPostProcess=0;
 	CWinThread*   pThread;
 	SetConsoleCtrlHandler(ConsoleHandler, TRUE);
@@ -138,6 +137,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 		else printf("%02d%02d%02d: RegServer: Error: %s\n",t.GetHour(),t.GetMinute(),t.GetSecond(),ErrMsg);
 		delete ErrMsg;
 		//SetPrePackageCount(hVirtualCloudServer,20);
+			luaShell.Init();
         while (!_ExitFlag) 
 		{
 			printf("\r                                                                               ");
@@ -149,7 +149,11 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 		Disconnect(hVirtualCloudServer);
 	}
 	CloseVirtualCloudServer(hVirtualCloudServer);
-	
+
+
+	while (!_ExitFlag){
+		Sleep(1000);
+	}
 	return nRetCode;
 }
 
@@ -179,7 +183,7 @@ void OnLuaMessage(CCHANDLE pSender, IOPCompleteArgs *pIOP,void *&pInBuffer,int &
 		else if (lua_req.requests(0).scriptno()==0)
 		{
 			while (LuaClass::buf_string_list.empty())
-				Sleep(800);
+			Sleep(800);
 			EnterCriticalSection(&lockBufString);
 			LScriptResponse rsp;
 			LScriptResponse_result *result=rsp.add_responses();
@@ -195,7 +199,8 @@ void OnLuaMessage(CCHANDLE pSender, IOPCompleteArgs *pIOP,void *&pInBuffer,int &
 		{
 			forceCancel=true;
 			Sleep(10000);
-			LuaClass::LuaF_future_entrust_callback3();
+//			LuaClass::LuaF_future_entrust_callback3();
+			LuaClass::restart();
 		}
 
 	}
@@ -273,7 +278,8 @@ int main()
 {
 	LuaClass *shell=new LuaClass();
 	shell->Init();
-	shell->executeMain("test.lua");
+	Sleep(1000);
+	shell->executeMain("trade.lua");
 	return 0;
 }
 

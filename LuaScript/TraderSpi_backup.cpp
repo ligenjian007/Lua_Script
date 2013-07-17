@@ -24,10 +24,10 @@ extern TThostFtdcDirectionType	DIRECTION;	// 买卖方向
 extern TThostFtdcOffsetFlagType OpenOrClose;
 
 // 会话参数
-extern TThostFtdcFrontIDType	FRONT_ID;	//前置编号
-extern TThostFtdcSessionIDType	SESSION_ID;	//会话编号
-extern TThostFtdcOrderRefType	ORDER_REF;	//报单引用
-extern int iNextOrderRef;
+TThostFtdcFrontIDType	FRONT_ID;	//前置编号
+TThostFtdcSessionIDType	SESSION_ID;	//会话编号
+TThostFtdcOrderRefType	ORDER_REF;	//报单引用
+int iNextOrderRef;
 
 extern char* ppInstrumentID[];	
 extern int iInstrumentID;
@@ -36,24 +36,16 @@ extern int iInstrumentID;
 extern int iRequestID;
 
 extern CRITICAL_SECTION lockStatusQueue;
-extern CRITICAL_SECTION lockInfoQueue;
-extern CRITICAL_SECTION lockOrderQueue;
-
-
-extern vector<StatusQueue> vectStatusQueue;
-
-typedef struct tagOrder
+/*
+typedef struct tagStatus
 {
-	TThostFtdcInstrumentIDType INSTRUMENT_ID;								// 合约代码
-	TThostFtdcDirectionType	DIRECTION;										// 买卖方向
-	TThostFtdcPriceType	LIMIT_PRICE;										// 价格
-	TThostFtdcOffsetFlagType OpenOrClose;									// 开平仓
-	TThostFtdcOrderRefType	ORDER_REF;										//报单引用
-}OrderQueue;
-extern vector<OrderQueue> vectOrderQueue;
-
-extern double BuyPrice;
-extern double SellPrice;
+	TThostFtdcInstrumentIDType InstrumentID;
+	char TraderStatus;//0表示未报单，1表示已报单但为开仓，2表示已开仓，3表示已报单但未平仓，4表示周期结束
+	double Price;//成交价
+	TThostFtdcDirectionType	Direction;
+}StatusQueue;
+*/
+extern vector<StatusQueue> vectStatusQueue;
 
 void CTraderSpi::OnFrontConnected()
 {
@@ -75,7 +67,7 @@ void CTraderSpi::ReqUserLogin()
 }
 
 void CTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin,
-								CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+		CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	cerr << "--->>> " << __FUNCTION__ << endl;
 	if (bIsLast && !IsErrorRspInfo(pRspInfo))
@@ -84,8 +76,8 @@ void CTraderSpi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin,
 		FRONT_ID = pRspUserLogin->FrontID;
 		SESSION_ID = pRspUserLogin->SessionID;
 		iNextOrderRef = atoi(pRspUserLogin->MaxOrderRef);
-		iNextOrderRef++;
-		sprintf(ORDER_REF, "%d", iNextOrderRef);
+		//iNextOrderRef++;
+		//sprintf(ORDER_REF, "%d", iNextOrderRef);
 		///获取当前交易日
 		cerr << "--->>> 获取当前交易日 = " << pTraderUserApi->GetTradingDay() << endl;
 		///投资者结算结果确认
@@ -110,7 +102,7 @@ void CTraderSpi::OnRspSettlementInfoConfirm(CThostFtdcSettlementInfoConfirmField
 	if (bIsLast && !IsErrorRspInfo(pRspInfo))
 	{
 		///请求查询合约
-		//ReqQryInstrument();
+		ReqQryInstrument();
 	}
 }
 
@@ -129,7 +121,7 @@ void CTraderSpi::OnRspQryInstrument(CThostFtdcInstrumentField *pInstrument, CTho
 	if (bIsLast && !IsErrorRspInfo(pRspInfo))
 	{
 		///请求查询合约
-		//ReqQryTradingAccount();
+		ReqQryTradingAccount();
 	}
 }
 
@@ -149,7 +141,7 @@ void CTraderSpi::OnRspQryTradingAccount(CThostFtdcTradingAccountField *pTradingA
 	if (bIsLast && !IsErrorRspInfo(pRspInfo))
 	{
 		///请求查询投资者持仓
-		//ReqQryInvestorPosition();
+		ReqQryInvestorPosition();
 	}
 }
 
@@ -176,16 +168,6 @@ void CTraderSpi::OnRspQryInvestorPosition(CThostFtdcInvestorPositionField *pInve
 
 void CTraderSpi::ReqOrderInsert()
 {
-	OrderQueue midOrderQueue;
-	EnterCriticalSection(&lockOrderQueue);
-	midOrderQueue = vectOrderQueue[0];
-	for (vector<OrderQueue>::iterator iter=vectOrderQueue.begin();iter!=vectOrderQueue.end();iter++)
-	{
-		vectOrderQueue.erase(iter);
-		break;
-	}
-	LeaveCriticalSection(&lockOrderQueue);
-
 	CThostFtdcInputOrderField req;
 	memset(&req, 0, sizeof(req));
 	///经纪公司代码
@@ -193,27 +175,27 @@ void CTraderSpi::ReqOrderInsert()
 	///投资者代码
 	strcpy(req.InvestorID, INVESTOR_ID);
 	///合约代码
-	strcpy(req.InstrumentID, midOrderQueue.INSTRUMENT_ID);
+	strcpy(req.InstrumentID, INSTRUMENT_ID);
 	///报单引用
-	strcpy(req.OrderRef, midOrderQueue.ORDER_REF);
+	strcpy(req.OrderRef, ORDER_REF);
 	///用户代码
-	//	TThostFtdcUserIDType	UserID;
+//	TThostFtdcUserIDType	UserID;
 	///报单价格条件: 限价
 	req.OrderPriceType = THOST_FTDC_OPT_LimitPrice;
 	///买卖方向: 
-	req.Direction = midOrderQueue.DIRECTION;
+	req.Direction = DIRECTION;
 	///组合开平标志: 开仓/平仓
-	req.CombOffsetFlag[0] = midOrderQueue.OpenOrClose;
+	req.CombOffsetFlag[0] = OpenOrClose;
 	///组合投机套保标志
 	req.CombHedgeFlag[0] = THOST_FTDC_HF_Speculation;
 	///价格
-	req.LimitPrice = midOrderQueue.LIMIT_PRICE;
+	req.LimitPrice = LIMIT_PRICE;
 	///数量: 1
 	req.VolumeTotalOriginal = 1;
 	///有效期类型: 当日有效
 	req.TimeCondition = THOST_FTDC_TC_GFD;
 	///GTD日期
-	//	TThostFtdcDateType	GTDDate;
+//	TThostFtdcDateType	GTDDate;
 	///成交量类型: 任何数量
 	req.VolumeCondition = THOST_FTDC_VC_AV;
 	///最小成交量: 1
@@ -221,15 +203,15 @@ void CTraderSpi::ReqOrderInsert()
 	///触发条件: 立即
 	req.ContingentCondition = THOST_FTDC_CC_Immediately;
 	///止损价
-	//	TThostFtdcPriceType	StopPrice;
+//	TThostFtdcPriceType	StopPrice;
 	///强平原因: 非强平
 	req.ForceCloseReason = THOST_FTDC_FCC_NotForceClose;
 	///自动挂起标志: 否
 	req.IsAutoSuspend = 0;
 	///业务单元
-	//	TThostFtdcBusinessUnitType	BusinessUnit;
+//	TThostFtdcBusinessUnitType	BusinessUnit;
 	///请求编号
-	//	TThostFtdcRequestIDType	RequestID;
+//	TThostFtdcRequestIDType	RequestID;
 	///用户强评标志: 否
 	req.UserForceClose = 0;
 
@@ -256,27 +238,27 @@ void CTraderSpi::ReqOrderAction(CThostFtdcOrderField *pOrder)
 	///投资者代码
 	strcpy(req.InvestorID, pOrder->InvestorID);
 	///报单操作引用
-	//	TThostFtdcOrderActionRefType	OrderActionRef;
+//	TThostFtdcOrderActionRefType	OrderActionRef;
 	///报单引用
 	strcpy(req.OrderRef, pOrder->OrderRef);
 	///请求编号
-	//	TThostFtdcRequestIDType	RequestID;
+//	TThostFtdcRequestIDType	RequestID;
 	///前置编号
 	req.FrontID = FRONT_ID;
 	///会话编号
 	req.SessionID = SESSION_ID;
 	///交易所代码
-	//	TThostFtdcExchangeIDType	ExchangeID;
+//	TThostFtdcExchangeIDType	ExchangeID;
 	///报单编号
-	//	TThostFtdcOrderSysIDType	OrderSysID;
+//	TThostFtdcOrderSysIDType	OrderSysID;
 	///操作标志
 	req.ActionFlag = THOST_FTDC_AF_Delete;
 	///价格
-	//	TThostFtdcPriceType	LimitPrice;
+//	TThostFtdcPriceType	LimitPrice;
 	///数量变化
-	//	TThostFtdcVolumeType	VolumeChange;
+//	TThostFtdcVolumeType	VolumeChange;
 	///用户代码
-	//	TThostFtdcUserIDType	UserID;
+//	TThostFtdcUserIDType	UserID;
 	///合约代码
 	strcpy(req.InstrumentID, pOrder->InstrumentID);
 
@@ -310,31 +292,30 @@ void CTraderSpi::OnRtnOrder(CThostFtdcOrderField *pOrder)
 ///成交通知
 void CTraderSpi::OnRtnTrade(CThostFtdcTradeField *pTrade)
 {
-	if (pTrade->OffsetFlag == THOST_FTDC_OF_Open)
+	EnterCriticalSection(&lockStatusQueue);
+	for (vector<StatusQueue>::iterator iter=vectStatusQueue.begin();iter!=vectStatusQueue.end();iter++)
 	{
-		if (pTrade->Direction == THOST_FTDC_D_Buy)
+		if (strcmp(pTrade->InstrumentID,iter->InstrumentID) == 0)
 		{
-			BuyPrice = pTrade->Price;
+			if (pTrade->OffsetFlag == THOST_FTDC_OF_Open)//开仓成功
+			{
+				iter->TraderStatus = '2';
+				iter->Direction = pTrade->Direction;
+				iter->Price = pTrade->Price;
+				LuaClass::LuaF_future_entrust_callback1(pTrade->SequenceNo,pTrade->OffsetFlag,pTrade->Direction,pTrade->InstrumentID,pTrade->Volume,pTrade->Price,BROKER_ID,pTrade->OrderRef,pTrade->TradeDate,pTrade->TradeTime);
+				//返回一个字符串
+			}
+			else if (pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday)//平今成功
+			{
+				iter->TraderStatus = '4';//若为循环，赋值为'0'
+				iter->Direction = pTrade->Direction;
+				iter->Price = pTrade->Price;
+				LuaClass::LuaF_future_entrust_callback2(pTrade->SequenceNo,pTrade->OffsetFlag,pTrade->Direction,pTrade->InstrumentID,pTrade->Volume,pTrade->Price,BROKER_ID,pTrade->OrderRef,pTrade->TradeDate,pTrade->TradeTime);
+				//返回一个字符串
+			}
 		}
-		else if (pTrade->Direction == THOST_FTDC_D_Sell)
-		{
-			SellPrice = pTrade->Price;
-		}
-		LuaClass::LuaF_future_entrust_callback1(pTrade->SequenceNo,pTrade->OffsetFlag,pTrade->Direction,pTrade->InstrumentID,pTrade->Volume,pTrade->Price,BROKER_ID,pTrade->OrderRef,pTrade->TradeDate,pTrade->TradeTime);
 	}
-	else if (pTrade->OffsetFlag == THOST_FTDC_OF_CloseToday)
-	{
-		if (pTrade->Direction == THOST_FTDC_D_Buy)
-		{
-			BuyPrice = 0;
-		}
-		else if (pTrade->Direction == THOST_FTDC_D_Sell)
-		{
-			SellPrice = 0;
-		}
-		LuaClass::LuaF_future_entrust_callback2(pTrade->SequenceNo,pTrade->OffsetFlag,pTrade->Direction,pTrade->InstrumentID,pTrade->Volume,pTrade->Price,BROKER_ID,pTrade->OrderRef,pTrade->TradeDate,pTrade->TradeTime);
-	}
-
+	LeaveCriticalSection(&lockStatusQueue);
 	cerr << "--->>> " << __FUNCTION__  << endl;
 }
 
@@ -343,7 +324,7 @@ void CTraderSpi:: OnFrontDisconnected(int nReason)
 	cerr << "--->>> " << __FUNCTION__ << endl;
 	cerr << "--->>> Reason = " << nReason << endl;
 }
-
+		
 void CTraderSpi::OnHeartBeatWarning(int nTimeLapse)
 {
 	cerr << "--->>> " << __FUNCTION__ << endl;
@@ -368,13 +349,13 @@ bool CTraderSpi::IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo)
 bool CTraderSpi::IsMyOrder(CThostFtdcOrderField *pOrder)
 {
 	return ((pOrder->FrontID == FRONT_ID) &&
-		(pOrder->SessionID == SESSION_ID) &&
-		(strcmp(pOrder->OrderRef, ORDER_REF) == 0));
+			(pOrder->SessionID == SESSION_ID) &&
+			(strcmp(pOrder->OrderRef, ORDER_REF) == 0));
 }
 
 bool CTraderSpi::IsTradingOrder(CThostFtdcOrderField *pOrder)
 {
 	return ((pOrder->OrderStatus != THOST_FTDC_OST_PartTradedNotQueueing) &&
-		(pOrder->OrderStatus != THOST_FTDC_OST_Canceled) &&
-		(pOrder->OrderStatus != THOST_FTDC_OST_AllTraded));
+			(pOrder->OrderStatus != THOST_FTDC_OST_Canceled) &&
+			(pOrder->OrderStatus != THOST_FTDC_OST_AllTraded));
 }

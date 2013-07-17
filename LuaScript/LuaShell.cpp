@@ -13,17 +13,22 @@ CThostFtdcTraderApi* pTraderUserApi;
 CTraderSpi* pTraderUserSpi;
 bool forceCancel;
 
-extern int iNextOrderRef;
+TThostFtdcFrontIDType	FRONT_ID;	//前置编号
+TThostFtdcSessionIDType	SESSION_ID;	//会话编号
+TThostFtdcOrderRefType	ORDER_REF;	//报单引用
+int iNextOrderRef;
 
 // 配置参数
-char MdFRONT_ADDR[] = "tcp://218.1.96.8:41213";		    // 行情前置地址
-TThostFtdcBrokerIDType	BROKER_ID = "1013";				// 经纪公司代码
-TThostFtdcInvestorIDType INVESTOR_ID = "00000042";		// 投资者代码
-TThostFtdcPasswordType  PASSWORD = "204517";			// 用户密码
+char TraderFRONT_ADDR[] = "tcp://115.238.106.252:41205";			// 前置地址
+char MdFRONT_ADDR[] = "tcp://115.238.106.252:41213";				// 行情前置地址
+TThostFtdcBrokerIDType	BROKER_ID = "1008";					// 经纪公司代码
+TThostFtdcInvestorIDType INVESTOR_ID = "00000001";			// 投资者代码
+TThostFtdcPasswordType  PASSWORD = "123456";				// 用户密码
+
+
 char *ppInstrumentID[] = {"IF1307","IF1308","IF1309","IF1312"};			// 行情订阅列表
 int iInstrumentID = 2;									// 行情订阅数量 para
 
-char TraderFRONT_ADDR[] = "tcp://218.1.96.8:41205";		// 前置地址
 TThostFtdcInstrumentIDType INSTRUMENT_ID;				// 合约代码
 TThostFtdcDirectionType	DIRECTION;						// 买卖方向
 TThostFtdcPriceType	LIMIT_PRICE;						// 价格
@@ -130,6 +135,9 @@ int	LuaClass::Init(string serverAddress, int cmdPort, int dataPort)
 	lua_register(pMainShell,"get_askprice",luaF_getAskPrice);
 	lua_register(pMainShell,"get_bidprice",luaF_getBidPrice);
 	lua_register(pMainShell,"trade",luaF_Trade);
+	lua_register(pMainShell,"get_buyprice",luaF_getBuyPrice);
+	lua_register(pMainShell,"get_sellprice",luaF_getSellPrice);
+	lua_register(pMainShell,"b",luaF_breakPoint);
 	
 	nSend=nRecv=nSucc=nFail=0;
 
@@ -142,7 +150,8 @@ int	LuaClass::Init(string serverAddress, int cmdPort, int dataPort)
 	times_=0;
 	totalTimes_=4;
 	canTerminate_=false;
-	
+	lua_getglobal(pMainShell, "connect");  
+	lua_pcall(pMainShell, 0, LUA_MULTRET, 0);
 	return 0;
 }
 
@@ -239,8 +248,10 @@ int LuaClass::shell_sleep(lua_State *pState)
 	int seconds;
 	seconds=lua_tointeger(pState,1);
 	Sleep(seconds);
-	return 0;
+	lua_pushinteger(pState,seconds);
+	return 1;
 }
+
 
 int LuaClass::shell_connect(lua_State *pState)
 {
@@ -266,6 +277,26 @@ int LuaClass::shell_connect(lua_State *pState)
 	SetDataPort(hHistoryCloudClient,12299);
 	SetUsername(hHistoryCloudClient,"tester");
 	SetPassword(hHistoryCloudClient,"123456");
+
+	//if (Connect(hVirtualCloudClient))
+	//{
+	//	lua_pushboolean(pState,true);
+	//}
+	//else
+	//{
+	//	lua_pushboolean(pState,false);
+	//}
+	//if (Connect(hHistoryCloudClient))
+	//{
+	//	lua_pushboolean(pState,true);
+	//}
+	if (false){
+		lua_pushboolean(pState,true);
+	}
+	else
+	{
+		lua_pushboolean(pState,false);
+	}
 
 	InitializeCriticalSection(&lockStatusQueue);
 	InitializeCriticalSection(&lockInfoQueue);
@@ -298,22 +329,7 @@ int LuaClass::shell_connect(lua_State *pState)
 	pTraderUserApi->RegisterFront(TraderFRONT_ADDR);						// connect
 	pTraderUserApi->Init();
 
-	if (Connect(hVirtualCloudClient))
-	{
-		lua_pushboolean(pState,true);
-	}
-	else
-	{
-		lua_pushboolean(pState,false);
-	}
-	if (Connect(hHistoryCloudClient))
-	{
-		lua_pushboolean(pState,true);
-	}
-	else
-	{
-		lua_pushboolean(pState,false);
-	}
+
 	return 2;
 	
 }
@@ -1049,67 +1065,6 @@ int LuaClass::LuaF_future_entrust(lua_State *pState)
 	return 0;	
 }
 
-int LuaClass::luaF_getAskPrice(lua_State *pState)
-{
-	double LastPrice;
-	strcpy(INSTRUMENT_ID,  lua_tostring(pState,1));
-	//	char *ppInstrumentIDNew[20];
-	EnterCriticalSection(&lockInfoQueue);
-	for (vector<InfoQueue>::iterator iter=vectInfoQueue.begin();iter!=vectInfoQueue.end();iter++)
-	{
-		if (strcmp(INSTRUMENT_ID,iter->InstrumentID) == 0)
-		{
-			LastPrice = iter->AskPrice1;
-			break;
-		}
-	}
-	LeaveCriticalSection(&lockInfoQueue);
-	lua_pushnumber(pState,LastPrice);
-	return 1;
-}
-
-int LuaClass::luaF_getBidPrice(lua_State *pState)
-{
-	double LastPrice;
-	strcpy(INSTRUMENT_ID,  lua_tostring(pState,1));
-	EnterCriticalSection(&lockInfoQueue);
-	for (vector<InfoQueue>::iterator iter=vectInfoQueue.begin();iter!=vectInfoQueue.end();iter++)
-	{
-		if (strcmp(INSTRUMENT_ID,iter->InstrumentID) == 0)
-		{
-			LastPrice = iter->BidPrice1;
-		}
-	}
-	LeaveCriticalSection(&lockInfoQueue);
-	lua_pushnumber(pState,LastPrice);
-	return 1;
-}
-
-int LuaClass::luaF_Trade(lua_State *pState)
-{
-	TThostFtdcInstrumentIDType INSTRUMENT_ID;
-	TThostFtdcDirectionType	DIRECTION;
-	TThostFtdcPriceType LIMIT_PRICE;
-	TThostFtdcOffsetFlagType OpenOrClose;
-	strcpy(INSTRUMENT_ID,  lua_tostring(pState,1));
-	DIRECTION = lua_tostring(pState,2)[0];
-	LIMIT_PRICE = lua_tonumber(pState,3);
-	OpenOrClose = lua_tostring(pState,4)[0];
-
-	OrderQueue midOrderQueue;
-	midOrderQueue.DIRECTION = DIRECTION;
-	midOrderQueue.LIMIT_PRICE = LIMIT_PRICE;
-	midOrderQueue.OpenOrClose = OpenOrClose;
-	strcpy(midOrderQueue.INSTRUMENT_ID,INSTRUMENT_ID);
-	iNextOrderRef++;
-	sprintf(midOrderQueue.ORDER_REF, "%d", iNextOrderRef);
-	EnterCriticalSection(&lockOrderQueue);
-	vectOrderQueue.push_back(midOrderQueue);
-	LeaveCriticalSection(&lockOrderQueue);
-	pTraderUserSpi->ReqOrderInsert();
-	return 0;
-}
-
 
 
 int LuaClass::LuaF_future_entrust_para(lua_State *pState)
@@ -1155,7 +1110,6 @@ int LuaClass::LuaF_future_entrust_para(lua_State *pState)
 }
 
 
-
 void LuaClass::LuaF_future_entrust_callback1(TThostFtdcSequenceNoType no,TThostFtdcOffsetFlagType flag,TThostFtdcDirectionType direction,TThostFtdcInstrumentIDType instrumentID,TThostFtdcVolumeType volume,TThostFtdcPriceType price,TThostFtdcBrokerIDType brokerID,TThostFtdcOrderRefType order,TThostFtdcDateType date,TThostFtdcTimeType time)
 {
 	string toAddString;
@@ -1166,7 +1120,7 @@ void LuaClass::LuaF_future_entrust_callback1(TThostFtdcSequenceNoType no,TThostF
 	if (times_==totalTimes_)
 	{
 		sprintf(s,"end\n");
-		LuaF_future_entrust_callback3();
+	//	LuaF_future_entrust_callback3();
 	}
 	toAddString.append(s);
 	buf_string_list.push_back(toAddString);
@@ -1183,12 +1137,13 @@ void LuaClass::LuaF_future_entrust_callback2(TThostFtdcSequenceNoType no,TThostF
 	if (times_==totalTimes_)
 	{
 		sprintf(s,"end\n");
-		LuaF_future_entrust_callback3();
+	//	LuaF_future_entrust_callback3();
 	}
 	toAddString.append(s);
 	buf_string_list.push_back(toAddString);
 	LeaveCriticalSection(&lockBufString);
 }
+
 
 void LuaClass::LuaF_future_entrust_callback3()
 {
@@ -1196,8 +1151,8 @@ void LuaClass::LuaF_future_entrust_callback3()
 	L=storedState;
 	if (canTerminate_)
 	{
-		pTraderUserApi->Release();
-		pMdUserApi->Release();
+	//	pTraderUserApi->Release();
+	//	pMdUserApi->Release();
 		if (times_==totalTimes_)
 			cout<<"it terminates because it finished all the tasks"<<endl;
 		else cout<<"it terminates because user send a terminates command"<<endl;
@@ -1207,14 +1162,114 @@ void LuaClass::LuaF_future_entrust_callback3()
 }
 
 
+
+
 LuaClass::~LuaClass()
 {
 	CCHANDLE hVirtualCloudClient,hHistoryCloudClient;
-	unbox_userdata(pMainShell,"hvcClient",hVirtualCloudClient);
-	unbox_userdata(pMainShell,"hstrClient",hHistoryCloudClient);
+//	unbox_userdata(pMainShell,"hvcClient",hVirtualCloudClient);
+//	unbox_userdata(pMainShell,"hstrClient",hHistoryCloudClient);
 
-	Disconnect(hVirtualCloudClient);
-	Disconnect(hHistoryCloudClient);
+//	Disconnect(hVirtualCloudClient);
+//	Disconnect(hHistoryCloudClient);
 	
 
+}
+
+
+
+int LuaClass::luaF_getAskPrice(lua_State *pState)
+{
+	double LastPrice;
+	strcpy(INSTRUMENT_ID,  lua_tostring(pState,1));
+	//	char *ppInstrumentIDNew[20];
+	EnterCriticalSection(&lockInfoQueue);
+	for (vector<InfoQueue>::iterator iter=vectInfoQueue.begin();iter!=vectInfoQueue.end();iter++)
+	{
+		if (strcmp(INSTRUMENT_ID,iter->InstrumentID) == 0)
+		{
+			LastPrice = iter->AskPrice1;
+			break;
+		}
+	}
+	LeaveCriticalSection(&lockInfoQueue);
+	lua_pushnumber(pState,LastPrice);
+	return 1;
+}
+
+int LuaClass::luaF_getBuyPrice(lua_State *pState)
+{
+	lua_tointeger(pState,1);
+	lua_pushnumber(pState,BuyPrice);
+	return 1;
+}
+
+int LuaClass::luaF_getSellPrice(lua_State *pState)
+{
+	lua_tointeger(pState,1);
+	lua_pushnumber(pState,SellPrice);
+	return 1;
+}
+
+int LuaClass::luaF_getBidPrice(lua_State *pState)
+{
+	double LastPrice;
+	strcpy(INSTRUMENT_ID,  lua_tostring(pState,1));
+	EnterCriticalSection(&lockInfoQueue);
+	for (vector<InfoQueue>::iterator iter=vectInfoQueue.begin();iter!=vectInfoQueue.end();iter++)
+	{
+		if (strcmp(INSTRUMENT_ID,iter->InstrumentID) == 0)
+		{
+			LastPrice = iter->BidPrice1;
+		}
+	}
+	LeaveCriticalSection(&lockInfoQueue);
+	lua_pushnumber(pState,LastPrice);
+	return 1;
+}
+
+int LuaClass::luaF_breakPoint(lua_State *pState)
+{
+	return 0;
+}
+
+int LuaClass::luaF_Trade(lua_State *pState)
+{
+	TThostFtdcInstrumentIDType INSTRUMENT_ID;
+	TThostFtdcDirectionType	DIRECTION;
+	TThostFtdcPriceType LIMIT_PRICE;
+	TThostFtdcOffsetFlagType OpenOrClose;
+	strcpy(INSTRUMENT_ID,  lua_tostring(pState,1));
+	DIRECTION = lua_tostring(pState,2)[0];
+	LIMIT_PRICE = lua_tonumber(pState,3);
+	OpenOrClose = lua_tostring(pState,4)[0];
+
+	OrderQueue midOrderQueue;
+	midOrderQueue.DIRECTION = DIRECTION;
+	midOrderQueue.LIMIT_PRICE = LIMIT_PRICE;
+	midOrderQueue.OpenOrClose = OpenOrClose;
+	strcpy(midOrderQueue.INSTRUMENT_ID,INSTRUMENT_ID);
+	iNextOrderRef++;
+	sprintf(midOrderQueue.ORDER_REF, "%d", iNextOrderRef);
+	EnterCriticalSection(&lockOrderQueue);
+	vectOrderQueue.push_back(midOrderQueue);
+	LeaveCriticalSection(&lockOrderQueue);
+	pTraderUserSpi->ReqOrderInsert();
+	Sleep(500);
+	return 0;
+}
+
+void LuaClass::restart(){
+	pTraderUserApi->Release();
+	times_=0;
+	EnterCriticalSection(&lockOrderQueue);
+	vectOrderQueue.clear();
+	LeaveCriticalSection(&lockOrderQueue);
+	pTraderUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi();			// 创建UserApi
+	pTraderUserSpi = new CTraderSpi();
+	pTraderUserApi->RegisterSpi((CThostFtdcTraderSpi*)pTraderUserSpi);		// 注册事件类
+	pTraderUserApi->SubscribePublicTopic(TERT_QUICK);						// 注册公有流
+	pTraderUserApi->SubscribePrivateTopic(TERT_QUICK);						// 注册私有流
+	pTraderUserApi->RegisterFront(TraderFRONT_ADDR);						// connect
+	pTraderUserApi->Init();
 }

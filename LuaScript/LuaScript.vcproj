@@ -356,10 +356,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\lib.lua"
-			>
-		</File>
-		<File
 			RelativePath=".\VirtualCloudServer\Debug\libVirtualCloudServerSharpWrapper.lib"
 			>
 		</File>
@@ -393,6 +389,10 @@
 		</File>
 		<File
 			RelativePath=".\ThostTraderApi\thosttraderapi.lib"
+			>
+		</File>
+		<File
+			RelativePath=".\trade.lua"
 			>
 		</File>
 	</Files>
